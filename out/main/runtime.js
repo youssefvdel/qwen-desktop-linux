@@ -21,28 +21,32 @@ const electron_1 = require("electron");
 function getRuntimePaths() {
     const platform = process.platform;
     const arch = process.arch;
-    const resourcesPath = path_1.default.join(electron_1.app.getAppPath(), 'resources');
+    // In production, process.resourcesPath points to /opt/Qwen Desktop/resources/
+    // In development, fall back to project root
+    const resourcesPath = electron_1.app.isPackaged
+        ? process.resourcesPath
+        : path_1.default.join(electron_1.app.getAppPath(), 'resources');
     if (platform === 'linux') {
         const archDir = arch === 'arm64' ? 'linux-arm64' : 'linux-x64';
         return {
-            bun: path_1.default.join(resourcesPath, 'bun', archDir, 'bun'),
-            uv: path_1.default.join(resourcesPath, 'uv', archDir, 'uv'),
-            uvx: path_1.default.join(resourcesPath, 'uv', archDir, 'uvx'),
+            bun: path_1.default.join(resourcesPath, 'resources', 'bun', archDir, 'bun'),
+            uv: path_1.default.join(resourcesPath, 'resources', 'uv', archDir, 'uv'),
+            uvx: path_1.default.join(resourcesPath, 'resources', 'uv', archDir, 'uvx'),
         };
     }
     if (platform === 'darwin') {
         const archDir = arch === 'arm64' ? 'darwin-arm64' : 'darwin-x64';
         return {
-            bun: path_1.default.join(resourcesPath, 'bun', archDir, 'bun'),
-            uv: path_1.default.join(resourcesPath, 'uv', archDir, 'uv'),
-            uvx: path_1.default.join(resourcesPath, 'uv', archDir, 'uvx'),
+            bun: path_1.default.join(resourcesPath, 'resources', 'bun', archDir, 'bun'),
+            uv: path_1.default.join(resourcesPath, 'resources', 'uv', archDir, 'uv'),
+            uvx: path_1.default.join(resourcesPath, 'resources', 'uv', archDir, 'uvx'),
         };
     }
     if (platform === 'win32') {
         return {
-            bun: path_1.default.join(resourcesPath, 'bun', 'win-x64', 'bun.exe'),
-            uv: path_1.default.join(resourcesPath, 'uv', 'win-x64', 'uv.exe'),
-            uvx: path_1.default.join(resourcesPath, 'uv', 'win-x64', 'uvx.exe'),
+            bun: path_1.default.join(resourcesPath, 'resources', 'bun', 'win-x64', 'bun.exe'),
+            uv: path_1.default.join(resourcesPath, 'resources', 'uv', 'win-x64', 'uv.exe'),
+            uvx: path_1.default.join(resourcesPath, 'resources', 'uv', 'win-x64', 'uvx.exe'),
         };
     }
     throw new Error(`Unsupported platform: ${platform}, arch: ${arch}`);
@@ -81,6 +85,9 @@ function checkRuntimeExists(runtimePath) {
  */
 async function ensureRuntimesExecutable() {
     if (process.platform === 'win32')
+        return;
+    // Skip chmod on packaged apps — files are already executable from the RPM
+    if (electron_1.app.isPackaged)
         return;
     const runtimes = getRuntimePaths();
     const chmod = require('fs').promises.chmod;

@@ -1,5 +1,6 @@
 import path from "path";
 import os from "os";
+import { app } from "electron";
 import { getBunPath, getUvxPath } from "./runtime.js";
 import type { McpConfig } from "../shared/types.js";
 
@@ -10,16 +11,18 @@ import type { McpConfig } from "../shared/types.js";
  */
 export function adaptConfig(configs: McpConfig): McpConfig {
   const adapted = { ...configs };
+  const correctBunPath = getBunPath();
+  const correctUvxPath = getUvxPath();
 
   for (const key in adapted) {
     const config = adapted[key];
     let cmd = config.command;
 
-    // Replace "npx" or "bun" with bundled bun
-    if (cmd === "npx" || cmd === "bun") {
-      cmd = getBunPath();
-      if (config.command === "npx") {
-        // npx commands become "bun x -y <package> <args>"
+    // Always normalize to the correct bundled runtime path
+    // Replace any path ending with /bun (from any source) with the bundled one
+    if (cmd.endsWith("/bun") || cmd === "bun" || cmd === "npx") {
+      cmd = correctBunPath;
+      if (config.command === "npx" || (!config.command.endsWith("/bun") && config.command !== correctBunPath)) {
         config.args = config.args || [];
         if (!config.args.includes("-y")) {
           config.args.unshift("-y");
@@ -30,9 +33,9 @@ export function adaptConfig(configs: McpConfig): McpConfig {
       }
     }
 
-    // Replace "uvx" with bundled uvx
-    if (cmd === "uvx") {
-      cmd = getUvxPath();
+    // Replace any path ending with /uvx or "uvx" with bundled one
+    if (cmd.endsWith("/uvx") || cmd === "uvx") {
+      cmd = correctUvxPath;
     }
 
     config.command = cmd;
@@ -49,20 +52,27 @@ export function adaptConfig(configs: McpConfig): McpConfig {
     }
 
     // Set PATH environment with Linux standard paths + bundled bin
-    const pathToMyBin = path.join(
-      process.resourcesPath || process.cwd(),
-      "resources",
-      "bin",
+    // In production, process.resourcesPath = /opt/Qwen Desktop/resources/
+    // Runtimes are at resources/resources/{bun,uv}/linux-x64/
+    const runtimeDir = path.join(
+      app.isPackaged ? process.resourcesPath : process.cwd(),
+      "resources", "resources",
     );
+    const bunDir = path.join(runtimeDir, "bun",
+      process.arch === "arm64" ? "linux-arm64" : "linux-x64");
+    const uvDir = path.join(runtimeDir, "uv",
+      process.arch === "arm64" ? "linux-arm64" : "linux-x64");
+
     const PATH = [
-      pathToMyBin,
+      bunDir,
+      uvDir,
       "/usr/local/bin",
       "/usr/bin",
       "/bin",
       "/usr/sbin",
       "/sbin",
-      "/snap/bin", // Snap packages
-      path.join(os.homedir(), ".local", "bin"), // User local bin
+      "/snap/bin",
+      path.join(os.homedir(), ".local", "bin"),
     ].join(":");
 
     config.env = {

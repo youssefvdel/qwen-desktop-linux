@@ -1,6 +1,6 @@
 {
   "name": "qwen-desktop-linux",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Qwen Desktop for Linux with full MCP support",
   "main": "./out/main/index.js",
   "author": "youssefvdel <youssefvdel@gmail.com>",

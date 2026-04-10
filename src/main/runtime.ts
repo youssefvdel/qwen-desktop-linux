@@ -10,31 +10,35 @@ import type { RuntimePaths } from '../shared/types.js';
 export function getRuntimePaths(): RuntimePaths {
   const platform = process.platform;
   const arch = process.arch;
-  const resourcesPath = path.join(app.getAppPath(), 'resources');
+  // In production, process.resourcesPath points to /opt/Qwen Desktop/resources/
+  // In development, fall back to project root
+  const resourcesPath = app.isPackaged
+    ? process.resourcesPath
+    : path.join(app.getAppPath(), 'resources');
 
   if (platform === 'linux') {
     const archDir = arch === 'arm64' ? 'linux-arm64' : 'linux-x64';
     return {
-      bun: path.join(resourcesPath, 'bun', archDir, 'bun'),
-      uv: path.join(resourcesPath, 'uv', archDir, 'uv'),
-      uvx: path.join(resourcesPath, 'uv', archDir, 'uvx'),
+      bun: path.join(resourcesPath, 'resources', 'bun', archDir, 'bun'),
+      uv: path.join(resourcesPath, 'resources', 'uv', archDir, 'uv'),
+      uvx: path.join(resourcesPath, 'resources', 'uv', archDir, 'uvx'),
     };
   }
 
   if (platform === 'darwin') {
     const archDir = arch === 'arm64' ? 'darwin-arm64' : 'darwin-x64';
     return {
-      bun: path.join(resourcesPath, 'bun', archDir, 'bun'),
-      uv: path.join(resourcesPath, 'uv', archDir, 'uv'),
-      uvx: path.join(resourcesPath, 'uv', archDir, 'uvx'),
+      bun: path.join(resourcesPath, 'resources', 'bun', archDir, 'bun'),
+      uv: path.join(resourcesPath, 'resources', 'uv', archDir, 'uv'),
+      uvx: path.join(resourcesPath, 'resources', 'uv', archDir, 'uvx'),
     };
   }
 
   if (platform === 'win32') {
     return {
-      bun: path.join(resourcesPath, 'bun', 'win-x64', 'bun.exe'),
-      uv: path.join(resourcesPath, 'uv', 'win-x64', 'uv.exe'),
-      uvx: path.join(resourcesPath, 'uv', 'win-x64', 'uvx.exe'),
+      bun: path.join(resourcesPath, 'resources', 'bun', 'win-x64', 'bun.exe'),
+      uv: path.join(resourcesPath, 'resources', 'uv', 'win-x64', 'uv.exe'),
+      uvx: path.join(resourcesPath, 'resources', 'uv', 'win-x64', 'uvx.exe'),
     };
   }
 
@@ -78,6 +82,8 @@ export function checkRuntimeExists(runtimePath: string): boolean {
  */
 export async function ensureRuntimesExecutable(): Promise<void> {
   if (process.platform === 'win32') return;
+  // Skip chmod on packaged apps — files are already executable from the RPM
+  if (app.isPackaged) return;
 
   const runtimes = getRuntimePaths();
   const chmod = require('fs').promises.chmod;

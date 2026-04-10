@@ -30,6 +30,8 @@ extraResources:
     to: "resources/bun"
   - from: "resources/uv"
     to: "resources/uv"
+  - from: "resources/icon.png"
+    to: "icon.png"
 
 directories:
   output: "dist"

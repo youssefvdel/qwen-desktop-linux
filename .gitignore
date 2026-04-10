@@ -39,6 +39,9 @@ yarn-error.log*
 tmp/
 temp/
 
+# AI agent coordination (local use only)
+AGENTS.md
+
 # Extracted runtimes (downloaded by postinstall)
 resources/bun/linux-*/
 resources/uv/linux-*/

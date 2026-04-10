@@ -1,11 +1,11 @@
-import { app, BrowserWindow, ipcMain, session, dialog, shell } from "electron";
+import { app, BrowserWindow, ipcMain, session, dialog, shell, Tray, Menu, nativeImage } from "electron";
 import path from "path";
 import fs from "fs";
 import settings from "electron-settings";
 import windowStateKeeper from "electron-window-state";
 import { McpProxy } from "../mcp/proxy.js";
 import { adaptConfig } from "./mcp-config.js";
-import { getPlatformName, ensureRuntimesExecutable } from "./runtime.js";
+import { getPlatformName, ensureRuntimesExecutable, getBunPath } from "./runtime.js";
 import { setupAutoUpdater } from "./updater.js";
 import type { McpConfig, DialogOptions } from "../shared/types.js";
 
@@ -20,6 +20,7 @@ const mcpServer = new McpProxy();
 
 // === Window State (persistence) ===
 let mainWindow: BrowserWindow | null = null;
+let appTray: Tray | null = null;
 
 /**
  * Get app version
@@ -233,17 +234,53 @@ const updateTitleBarForSystemTheme = async (isDark: boolean): Promise<void> => {
 
 /**
  * Load MCP config from electron-settings
+ * If no config exists, creates default MCP servers (Fetch, Filesystem, Sequential-Thinking)
  */
 async function loadMcpConfig(): Promise<McpConfig> {
   try {
     if (await settings.has(MCP_CONFIG_KEY)) {
       const config = await settings.get(MCP_CONFIG_KEY);
-      return (config as unknown as McpConfig) || {};
+      const parsed = (config as unknown as McpConfig) || {};
+      if (Object.keys(parsed).length > 0) {
+        return parsed; // User has custom config, use it
+      }
     }
+
+    // First launch — create default MCP servers
+    console.log("[Config] No MCP config found, creating defaults...");
+    const defaults = getDefaultMcpConfig();
+    await settings.set(MCP_CONFIG_KEY, defaults as any);
+    console.log("[Config] ✅ Default MCP servers created:", Object.keys(defaults));
+    return defaults;
   } catch (error) {
     console.error("[Config] Failed to load MCP config:", error);
   }
   return {};
+}
+
+/**
+ * Get default MCP server configuration for first-time users
+ */
+function getDefaultMcpConfig(): McpConfig {
+  const bunPath = getBunPath();
+  const homeDir = require("os").homedir();
+  return {
+    Fetch: {
+      command: bunPath,
+      args: ["x", "-y", "@modelcontextprotocol/server-fetch"],
+      transportType: "stdio",
+    },
+    Filesystem: {
+      command: bunPath,
+      args: ["x", "-y", "@modelcontextprotocol/server-filesystem", homeDir],
+      transportType: "stdio",
+    },
+    "Sequential-Thinking": {
+      command: bunPath,
+      args: ["x", "-y", "@modelcontextprotocol/server-sequential-thinking"],
+      transportType: "stdio",
+    },
+  };
 }
 
 /**
@@ -326,6 +363,75 @@ function createWindow() {
   console.log("[Window] Loading:", WEBVIEW_URL);
   mainWindow.loadURL(WEBVIEW_URL);
 
+  // === TEMPORARY: Network Interception Logger ===
+  // Captures ALL network requests to discover Qwen's API endpoints
+  const ses = mainWindow!.webContents.session;
+
+  ses.webRequest.onBeforeRequest(
+    { urls: ["*://*/*"] },
+    (details, callback) => {
+      // Only log XHR requests (images, CSS, etc. excluded)
+      if (details.resourceType === "xhr") {
+        console.log(`[NET-LOG] ${details.method} ${details.url} (${details.resourceType})`);
+        if (details.uploadData) {
+          try {
+            const body = details.uploadData
+              .map((d: any) => d.bytes?.toString() || d.file || "")
+              .join("");
+            if (body.length < 2000) {
+              console.log(`[NET-LOG] Body:`, body.substring(0, 500));
+            }
+          } catch (e) {}
+        }
+      }
+      callback({});
+    }
+  );
+
+  ses.webRequest.onSendHeaders(
+    { urls: ["*://*/*"] },
+    (details) => {
+      if (details.resourceType === "xhr") {
+        console.log(`[NET-LOG] Headers for ${details.url}:`, JSON.stringify(details.requestHeaders, null, 2).substring(0, 500));
+      }
+    }
+  );
+
+  // CDP Debugger for capturing response bodies
+  mainWindow!.webContents.debugger.attach("1.3");
+  mainWindow!.webContents.debugger.sendCommand("Network.enable");
+
+  mainWindow!.webContents.debugger.on(
+    "message",
+    (_event: any, method: string, params: any) => {
+      if (method === "Network.responseReceived") {
+        const { requestId, response, type } = params;
+        // Only log XHR/Fetch responses
+        if (type === "XHR" || type === "Fetch") {
+          console.log(
+            `[NET-RESP] ${response.status} ${response.url} (${type})`,
+          );
+          // Try to get the response body
+          const mw = mainWindow;
+          if (mw) {
+            mw.webContents.debugger.sendCommand(
+              "Network.getResponseBody",
+              { requestId },
+            ).then((result: any) => {
+              if (result && result.body) {
+                const bodyPreview = result.body.substring(0, 500);
+                console.log(`[NET-RESP] Body:`, bodyPreview);
+              }
+            }).catch((err: any) => {
+              // Body might not be available for all requests
+            });
+          }
+        }
+      }
+    },
+  );
+  // === END TEMPORARY ===
+
   // Log window events for debugging
   mainWindow.webContents.on("did-start-loading", () => {
     console.log("[Window] 🔄 Started loading...");
@@ -379,12 +485,20 @@ function createWindow() {
   mainWindow.on("closed", () => {
     console.log("[Window] Window closed");
     mainWindow = null;
-    // Force quit immediately when window closes
-    process.exit(0);
+    // Only exit if actually quitting, otherwise stay in tray
+    if (isQuitting) {
+      process.exit(0);
+    }
   });
 
-  mainWindow.on("close", () => {
+  mainWindow.on("close", (event) => {
     console.log("[Window] Window closing");
+    // Don't actually close, just hide to tray
+    if (!isQuitting) {
+      event.preventDefault();
+      mainWindow?.hide();
+      console.log("[Window] Hidden to tray instead of closing");
+    }
   });
 
   // Handle external links
@@ -413,9 +527,104 @@ function createWindow() {
 // === System Tray (Linux) ===
 
 function setupSystemTray() {
-  // Linux AppIndicator support would go here
-  // For now, basic implementation
-  console.log("[Tray] System tray setup for Linux");
+  console.log("[Tray] Setting up system tray...");
+
+  // Get the icon path - try multiple locations
+  const iconPaths = [
+    path.join(process.resourcesPath, "icon.png"),
+    path.join(__dirname, "../../resources/icon.png"),
+    path.join(process.cwd(), "resources/icon.png"),
+  ];
+
+  let iconPath = iconPaths[0];
+  for (const p of iconPaths) {
+    if (fs.existsSync(p)) {
+      iconPath = p;
+      console.log(`[Tray] ✅ Found icon at: ${p}`);
+      break;
+    }
+  }
+
+  try {
+    // Create tray icon
+    const trayIcon = nativeImage.createFromPath(iconPath);
+    
+    // Resize for tray (Linux typically expects 16-24px icons)
+    const resizedIcon = trayIcon.resize({ width: 16, height: 16 });
+    
+    appTray = new Tray(resizedIcon);
+    appTray.setToolTip("Qwen Desktop");
+
+    // Create context menu
+    const contextMenu = Menu.buildFromTemplate([
+      {
+        label: "Show Qwen",
+        click: () => {
+          if (mainWindow) {
+            if (mainWindow.isMinimized()) {
+              mainWindow.restore();
+            }
+            mainWindow.show();
+            mainWindow.focus();
+          } else {
+            createWindow();
+          }
+        },
+      },
+      {
+        label: "Hide Qwen",
+        click: () => {
+          mainWindow?.hide();
+        },
+      },
+      { type: "separator" },
+      {
+        label: "Toggle DevTools",
+        click: () => {
+          openDevTool();
+        },
+      },
+      { type: "separator" },
+      {
+        label: "Quit",
+        click: () => {
+          isQuitting = true;
+          app.quit();
+        },
+      },
+    ]);
+
+    appTray.setContextMenu(contextMenu);
+
+    // Click on tray icon to show/hide window
+    appTray.on("click", () => {
+      if (mainWindow && mainWindow.isVisible()) {
+        mainWindow.hide();
+      } else if (mainWindow) {
+        mainWindow.show();
+        mainWindow.focus();
+      } else {
+        createWindow();
+      }
+    });
+
+    // Double-click to restore window
+    appTray.on("double-click", () => {
+      if (mainWindow) {
+        if (mainWindow.isMinimized()) {
+          mainWindow.restore();
+        }
+        if (!mainWindow.isVisible()) {
+          mainWindow.show();
+        }
+        mainWindow.focus();
+      }
+    });
+
+    console.log("[Tray] ✅ System tray setup complete");
+  } catch (error) {
+    console.error("[Tray] ❌ Failed to setup system tray:", error);
+  }
 }
 
 // === IPC Registration ===
@@ -580,16 +789,31 @@ app.on("before-quit", (event) => {
   isQuitting = true;
 
   console.log("[App] Cleaning up MCP servers...");
-  
-  // Disconnect all MCP clients to kill child processes (bun/uvx)
+
+  // Disconnect all MCP servers to kill child processes (bun/uvx)
   // This is crucial to allow the app to exit fully
   mcpServer.disconnectAll().then(() => {
     mcpServer.stopHTTP();
     console.log("[App] MCP cleanup complete, quitting...");
+    
+    // Destroy tray before quitting
+    if (appTray) {
+      appTray.destroy();
+      appTray = null;
+      console.log("[Tray] Tray icon destroyed");
+    }
+    
     app.quit();
   }).catch((err) => {
     console.error("[App] Error during MCP cleanup:", err);
     mcpServer.stopHTTP();
+    
+    // Destroy tray before quitting
+    if (appTray) {
+      appTray.destroy();
+      appTray = null;
+    }
+    
     app.quit();
   });
 });
