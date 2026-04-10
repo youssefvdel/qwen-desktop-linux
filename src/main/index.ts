@@ -574,17 +574,24 @@ app.on("window-all-closed", () => {
 
 app.on("before-quit", (event) => {
   if (isQuitting) return;
-  
+
   // Prevent default quit to do cleanup first
   event.preventDefault();
   isQuitting = true;
-  
+
   console.log("[App] Cleaning up MCP servers...");
-  // Clean up MCP connections synchronously where possible
-  mcpServer.stopHTTP();
   
-  // Allow app to quit now
-  app.quit();
+  // Disconnect all MCP clients to kill child processes (bun/uvx)
+  // This is crucial to allow the app to exit fully
+  mcpServer.disconnectAll().then(() => {
+    mcpServer.stopHTTP();
+    console.log("[App] MCP cleanup complete, quitting...");
+    app.quit();
+  }).catch((err) => {
+    console.error("[App] Error during MCP cleanup:", err);
+    mcpServer.stopHTTP();
+    app.quit();
+  });
 });
 
 // Handle uncaught exceptions
