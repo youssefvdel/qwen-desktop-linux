@@ -379,6 +379,8 @@ function createWindow() {
   mainWindow.on("closed", () => {
     console.log("[Window] Window closed");
     mainWindow = null;
+    // Force quit immediately when window closes
+    process.exit(0);
   });
 
   mainWindow.on("close", () => {
@@ -389,11 +391,6 @@ function createWindow() {
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url);
     return { action: "deny" };
-  });
-
-  // Manage window state on close
-  mainWindow.on("closed", () => {
-    mainWindow = null;
   });
 
   // Linux: Handle system tray
@@ -477,23 +474,18 @@ function setupProtocolHandler() {
     handleDeepLink(url);
   });
 
-  // Handle second instance (Linux)
-  const gotTheLock = app.requestSingleInstanceLock();
-  if (!gotTheLock) {
-    app.quit();
-  } else {
-    app.on("second-instance", (_event, commandLine) => {
-      // Someone tried to open a second instance
-      if (mainWindow) {
-        if (mainWindow.isMinimized()) mainWindow.restore();
-        mainWindow.focus();
-      }
+  // Handle second instance (Linux) — always create window if none exists
+  app.on("second-instance", (_event, commandLine) => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    } else {
+      createWindow();
+    }
 
-      // Check for qwen:// URL in command line
-      const url = commandLine.find((arg) => arg.startsWith("qwen://"));
-      if (url) handleDeepLink(url);
-    });
-  }
+    const url = commandLine.find((arg) => arg.startsWith("qwen://"));
+    if (url) handleDeepLink(url);
+  });
 }
 
 function handleDeepLink(url: string) {
@@ -571,22 +563,28 @@ app.whenReady().then(async () => {
   }
 });
 
-app.on("window-all-closed", () => {
-  console.log("[App] ⚠️ All windows closed - NOT quitting (keeping app alive)");
-  // Clean up MCP connections
-  mcpServer.disconnectAll().then(() => {
-    mcpServer.stopHTTP();
-  });
+let isQuitting = false;
 
-  // Don't quit on Linux - keep app running
-  // if (process.platform !== "darwin") {
-  //   app.quit();
-  // }
+app.on("window-all-closed", () => {
+  console.log("[App] All windows closed");
+  if (process.platform !== "darwin") {
+    app.quit();
+  }
 });
 
-app.on("before-quit", async () => {
-  await mcpServer.disconnectAll();
+app.on("before-quit", (event) => {
+  if (isQuitting) return;
+  
+  // Prevent default quit to do cleanup first
+  event.preventDefault();
+  isQuitting = true;
+  
+  console.log("[App] Cleaning up MCP servers...");
+  // Clean up MCP connections synchronously where possible
   mcpServer.stopHTTP();
+  
+  // Allow app to quit now
+  app.quit();
 });
 
 // Handle uncaught exceptions

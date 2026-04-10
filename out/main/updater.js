@@ -51,6 +51,8 @@ function setupAutoUpdater() {
         console.error("[Updater] Update error:", err);
     });
     console.log("[Updater] Checking for updates...");
-    electron_updater_1.autoUpdater.checkForUpdatesAndNotify();
+    electron_updater_1.autoUpdater.checkForUpdatesAndNotify().catch(() => {
+        // Silently ignore update check errors (e.g., no GitHub releases yet)
+    });
 }
 //# sourceMappingURL=updater.js.map

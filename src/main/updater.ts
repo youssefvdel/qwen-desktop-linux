@@ -55,5 +55,7 @@ export function setupAutoUpdater() {
   });
 
   console.log("[Updater] Checking for updates...");
-  autoUpdater.checkForUpdatesAndNotify();
+  autoUpdater.checkForUpdatesAndNotify().catch(() => {
+    // Silently ignore update check errors (e.g., no GitHub releases yet)
+  });
 }

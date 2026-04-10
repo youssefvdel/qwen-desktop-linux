@@ -321,6 +321,8 @@ function createWindow() {
     mainWindow.on("closed", () => {
         console.log("[Window] Window closed");
         mainWindow = null;
+        // Force quit immediately when window closes
+        process.exit(0);
     });
     mainWindow.on("close", () => {
         console.log("[Window] Window closing");
@@ -329,10 +331,6 @@ function createWindow() {
     mainWindow.webContents.setWindowOpenHandler((details) => {
         electron_1.shell.openExternal(details.url);
         return { action: "deny" };
-    });
-    // Manage window state on close
-    mainWindow.on("closed", () => {
-        mainWindow = null;
     });
     // Linux: Handle system tray
     if (process.platform === "linux") {
@@ -396,25 +394,20 @@ function setupProtocolHandler() {
         event.preventDefault();
         handleDeepLink(url);
     });
-    // Handle second instance (Linux)
-    const gotTheLock = electron_1.app.requestSingleInstanceLock();
-    if (!gotTheLock) {
-        electron_1.app.quit();
-    }
-    else {
-        electron_1.app.on("second-instance", (_event, commandLine) => {
-            // Someone tried to open a second instance
-            if (mainWindow) {
-                if (mainWindow.isMinimized())
-                    mainWindow.restore();
-                mainWindow.focus();
-            }
-            // Check for qwen:// URL in command line
-            const url = commandLine.find((arg) => arg.startsWith("qwen://"));
-            if (url)
-                handleDeepLink(url);
-        });
-    }
+    // Handle second instance (Linux) — always create window if none exists
+    electron_1.app.on("second-instance", (_event, commandLine) => {
+        if (mainWindow) {
+            if (mainWindow.isMinimized())
+                mainWindow.restore();
+            mainWindow.focus();
+        }
+        else {
+            createWindow();
+        }
+        const url = commandLine.find((arg) => arg.startsWith("qwen://"));
+        if (url)
+            handleDeepLink(url);
+    });
 }
 function handleDeepLink(url) {
     console.log("[DeepLink] Handling URL:", url);
@@ -480,20 +473,24 @@ electron_1.app.whenReady().then(async () => {
         }, 1000);
     }
 });
+let isQuitting = false;
 electron_1.app.on("window-all-closed", () => {
-    console.log("[App] ⚠️ All windows closed - NOT quitting (keeping app alive)");
-    // Clean up MCP connections
-    mcpServer.disconnectAll().then(() => {
-        mcpServer.stopHTTP();
-    });
-    // Don't quit on Linux - keep app running
-    // if (process.platform !== "darwin") {
-    //   app.quit();
-    // }
+    console.log("[App] All windows closed");
+    if (process.platform !== "darwin") {
+        electron_1.app.quit();
+    }
 });
-electron_1.app.on("before-quit", async () => {
-    await mcpServer.disconnectAll();
+electron_1.app.on("before-quit", (event) => {
+    if (isQuitting)
+        return;
+    // Prevent default quit to do cleanup first
+    event.preventDefault();
+    isQuitting = true;
+    console.log("[App] Cleaning up MCP servers...");
+    // Clean up MCP connections synchronously where possible
     mcpServer.stopHTTP();
+    // Allow app to quit now
+    electron_1.app.quit();
 });
 // Handle uncaught exceptions
 process.on("uncaughtException", (error) => {
