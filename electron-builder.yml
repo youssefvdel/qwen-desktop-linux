@@ -5,6 +5,9 @@ copyright: Copyright © 2026 Qwen Community
 linux:
   target:
     - AppImage
+    - deb
+    - rpm
+    - flatpak
   category: Utility
   icon: "resources/icon.png"
   artifactName: "${productName}-${version}-${arch}.${ext}"
