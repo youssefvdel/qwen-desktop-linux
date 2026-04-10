@@ -265,6 +265,15 @@ function getDefaultMcpConfig(): McpConfig {
   const bunPath = getBunPath();
   const homeDir = require("os").homedir();
   return {
+    "Desktop-Commander": {
+      command: bunPath,
+      args: ["x", "-y", "@wonderwhy-er/desktop-commander"],
+      transportType: "stdio",
+      env: {
+        PUPPETEER_SKIP_DOWNLOAD: "true",
+        PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true",
+      },
+    },
     Fetch: {
       command: bunPath,
       args: ["x", "-y", "@modelcontextprotocol/server-fetch"],
@@ -482,22 +491,11 @@ function createWindow() {
     },
   );
 
-  mainWindow.on("closed", () => {
-    console.log("[Window] Window closed");
-    mainWindow = null;
-    // Only exit if actually quitting, otherwise stay in tray
-    if (isQuitting) {
-      process.exit(0);
-    }
-  });
-
   mainWindow.on("close", (event) => {
-    console.log("[Window] Window closing");
-    // Don't actually close, just hide to tray
-    if (!isQuitting) {
-      event.preventDefault();
-      mainWindow?.hide();
-      console.log("[Window] Hidden to tray instead of closing");
+    console.log("[Window] Close event fired - hiding to tray");
+    event.preventDefault();
+    if (mainWindow) {
+      mainWindow.hide();
     }
   });
 
@@ -587,10 +585,7 @@ function setupSystemTray() {
       { type: "separator" },
       {
         label: "Quit",
-        click: () => {
-          isQuitting = true;
-          app.quit();
-        },
+        click: () => app.quit(),
       },
     ]);
 
@@ -772,50 +767,15 @@ app.whenReady().then(async () => {
   }
 });
 
-let isQuitting = false;
-
 app.on("window-all-closed", () => {
-  console.log("[App] All windows closed");
-  if (process.platform !== "darwin") {
-    app.quit();
-  }
+  console.log("[App] All windows closed - keeping app alive for tray");
+  // Do not quit - tray icon keeps app running
 });
 
-app.on("before-quit", (event) => {
-  if (isQuitting) return;
-
-  // Prevent default quit to do cleanup first
-  event.preventDefault();
-  isQuitting = true;
-
-  console.log("[App] Cleaning up MCP servers...");
-
-  // Disconnect all MCP servers to kill child processes (bun/uvx)
-  // This is crucial to allow the app to exit fully
-  mcpServer.disconnectAll().then(() => {
-    mcpServer.stopHTTP();
-    console.log("[App] MCP cleanup complete, quitting...");
-    
-    // Destroy tray before quitting
-    if (appTray) {
-      appTray.destroy();
-      appTray = null;
-      console.log("[Tray] Tray icon destroyed");
-    }
-    
-    app.quit();
-  }).catch((err) => {
-    console.error("[App] Error during MCP cleanup:", err);
-    mcpServer.stopHTTP();
-    
-    // Destroy tray before quitting
-    if (appTray) {
-      appTray.destroy();
-      appTray = null;
-    }
-    
-    app.quit();
-  });
+app.on("before-quit", () => {
+  // Just cleanup, don't block quit
+  mcpServer.disconnectAll().catch(() => {});
+  mcpServer.stopHTTP();
 });
 
 // Handle uncaught exceptions
