@@ -500,6 +500,11 @@ function setupSystemTray() {
                 label: "Quit",
                 click: () => {
                     isQuitting = true;
+                    if (appTray) {
+                        appTray.destroy();
+                        appTray = null;
+                    }
+                    mainWindow = null;
                     electron_1.app.quit();
                 },
             },
@@ -659,8 +664,14 @@ electron_1.app.whenReady().then(async () => {
     }
 });
 electron_1.app.on("window-all-closed", () => {
-    console.log("[App] All windows closed - keeping app alive for tray");
-    // Do not quit - tray icon keeps app running
+    console.log("[App] All windows closed");
+    if (isQuitting) {
+        console.log("[App] Quitting confirmed - exiting");
+        electron_1.app.exit(0);
+    }
+    else {
+        console.log("[App] Keeping app alive for tray");
+    }
 });
 electron_1.app.on("before-quit", () => {
     // Just cleanup, don't block quit

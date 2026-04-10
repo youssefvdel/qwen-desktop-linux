@@ -590,6 +590,11 @@ function setupSystemTray() {
         label: "Quit",
         click: () => {
           isQuitting = true;
+          if (appTray) {
+            appTray.destroy();
+            appTray = null;
+          }
+          mainWindow = null;
           app.quit();
         },
       },
@@ -774,8 +779,13 @@ app.whenReady().then(async () => {
 });
 
 app.on("window-all-closed", () => {
-  console.log("[App] All windows closed - keeping app alive for tray");
-  // Do not quit - tray icon keeps app running
+  console.log("[App] All windows closed");
+  if (isQuitting) {
+    console.log("[App] Quitting confirmed - exiting");
+    app.exit(0);
+  } else {
+    console.log("[App] Keeping app alive for tray");
+  }
 });
 
 app.on("before-quit", () => {
