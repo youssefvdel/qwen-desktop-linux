@@ -13,7 +13,6 @@
 ---
 
 ## 1. App Installation Location
-
 - **Installation path:** `C:\Program Files\Qwen`
 - **Version:** 1.0.3
 - **App size:** ~320MB (including bundled runtimes)
@@ -29,9 +28,9 @@ Get-ChildItem -Path $env:APPDATA -Recurse -ErrorAction SilentlyContinue | Where-
 
 ### Output:
 ```
-C:\Program Files\Qwen                    <- Main installation
-C:\Users\youssefvdel\AppData\Local\qwen-updater\installer.exe  (124MB installer)
-C:\Users\youssefvdel\AppData\Roaming\Qwen  <- User data directory
+C:\Program Files\Qwen <- Main installation
+C:\Users\youssefvdel\AppData\Local\qwen-updater\installer.exe (124MB installer)
+C:\Users\youssefvdel\AppData\Roaming\Qwen <- User data directory
 ```
 
 ---
@@ -41,49 +40,49 @@ C:\Users\youssefvdel\AppData\Roaming\Qwen  <- User data directory
 ### Directory Tree:
 ```
 C:\Program Files\Qwen\
-├── Qwen.exe                           (199MB - Electron binary)
-├── chrome_100_percent.pak
-├── chrome_200_percent.pak
-├── d3dcompiler_47.dll
-├── ffmpeg.dll
-├── icudtl.dat
-├── libEGL.dll
-├── libGLESv2.dll
-├── LICENSE.electron.txt
-├── LICENSES.chromium.html
-├── resources.pak
-├── snapshot_blob.bin
-├── Uninstall Qwen.exe
-├── v8_context_snapshot.bin
-├── vk_swiftshader.dll
-├── vk_swiftshader_icd.json
-├── vulkan-1.dll
-├── locales\                           (47 language .pak files)
-└── resources\
-    ├── app-update.yml
-    ├── app.asar                       (16.7MB - Main app code)
-    ├── elevate.exe
-    ├── assets\
-    │   ├── icon.png
-    │   └── icon_dark.png
-    ├── bun\
-    │   └── bun.exe                    (114MB - Bundled Bun runtime)
-    ├── i18n\
-    │   ├── ar-BH.json
-    │   ├── de-DE.json
-    │   ├── en-US.json
-    │   ├── es-ES.json
-    │   ├── fr-FR.json
-    │   ├── it-IT.json
-    │   ├── ja-JP.json
-    │   ├── ko-KR.json
-    │   ├── pt-PT.json
-    │   ├── ru-RU.json
-    │   ├── zh-CN.json
-    │   └── zh-TW.json
-    └── python\
-        ├── uv.exe                     (50MB - Bundled uv)
-        └── uvx.exe                    (339KB - Bundled uvx)
+ Qwen.exe (199MB - Electron binary)
+ chrome_100_percent.pak
+ chrome_200_percent.pak
+ d3dcompiler_47.dll
+ ffmpeg.dll
+ icudtl.dat
+ libEGL.dll
+ libGLESv2.dll
+ LICENSE.electron.txt
+ LICENSES.chromium.html
+ resources.pak
+ snapshot_blob.bin
+ Uninstall Qwen.exe
+ v8_context_snapshot.bin
+ vk_swiftshader.dll
+ vk_swiftshader_icd.json
+ vulkan-1.dll
+ locales\ (47 language .pak files)
+ resources\
+ app-update.yml
+ app.asar (16.7MB - Main app code)
+ elevate.exe
+ assets\
+ icon.png
+ icon_dark.png
+ bun\
+ bun.exe (114MB - Bundled Bun runtime)
+ i18n\
+ ar-BH.json
+ de-DE.json
+ en-US.json
+ es-ES.json
+ fr-FR.json
+ it-IT.json
+ ja-JP.json
+ ko-KR.json
+ pt-PT.json
+ ru-RU.json
+ zh-CN.json
+ zh-TW.json
+ python\
+ uv.exe (50MB - Bundled uv)
+ uvx.exe (339KB - Bundled uvx)
 ```
 
 ### Key Files Found:
@@ -103,91 +102,91 @@ C:\Program Files\Qwen\
 ### Extracted File Structure:
 ```
 extracted-app\
-├── package.json
-├── node_modules\
-│   ├── @ali\
-│   │   ├── aes-tracker\              (Analytics/tracking)
-│   │   └── spark-mcp\                (Alibaba's MCP proxy wrapper)
-│   ├── @babel\runtime\
-│   ├── @electron-toolkit\
-│   │   ├── preload\
-│   │   └── utils\
-│   ├── @modelcontextprotocol\sdk\     (Official MCP SDK v1.13.1)
-│   ├── @uni\runtime\
-│   ├── accepts, argparse, body-parser, bytes, ... (Express deps)
-│   ├── content-disposition, content-type, cookie, ...
-│   ├── cors\
-│   ├── cross-env\
-│   ├── cross-spawn\
-│   ├── debug\
-│   ├── depd\
-│   ├── electron-settings\            (Settings persistence)
-│   ├── electron-updater\             (Auto-update)
-│   ├── electron-window-state\        (Window state persistence)
-│   ├── encodeurl, ee-first, etag, ...
-│   ├── eventsource\
-│   ├── eventsource-parser\
-│   ├── express\                      (HTTP server for MCP proxy)
-│   ├── express-rate-limit\
-│   ├── fast-deep-equal, fast-json-stable-stringify\
-│   ├── finalhandler, forwarded, fresh\
-│   ├── fs-extra, function-bind, graceful-fs\
-│   ├── get-intrinsic, get-proto, gopd\
-│   ├── has-symbols, hasown\
-│   ├── http-errors, iconv-lite\
-│   ├── inherits, ipaddr.js, is-promise\
-│   ├── json-schema-traverse, media-typer, merge-descriptors\
-│   ├── mime-db, mime-types, ms\
-│   ├── negotiate, object-assign, on-finished\
-│   ├── once, parseurl, path-to-regexp\
-│   ├── proxy-addr, qs, range-parser\
-│   ├── raw-body, require-from-string\
-│   ├── router, safe-buffer, safer-buffer\
-│   ├── semver, send, serve-static\
-│   ├── setprototypeof, side-channel, side-channel-list\
-│   ├── side-channel-map, side-channel-weakmap\
-│   ├── statuses, toidentifier, tslib\
-│   ├── type-is, unpipe, utils-merge\
-│   ├── vary\
-│   ├── zod\                          (Schema validation)
-│   └── zod-to-json-schema\
-└── out\
-    ├── main\
-    │   └── index.js                  (Main Electron process)
-    ├── preload\
-    │   └── index.js                  (Preload script)
-    └── renderer\
-        ├── index.html
-        └── assets\
-            ├── index-J-5aykDP.js     (Renderer React bundle)
-            └── index-DxqrF9Fh.css
+ package.json
+ node_modules\
+ @ali\
+ aes-tracker\ (Analytics/tracking)
+ spark-mcp\ (Alibaba's MCP proxy wrapper)
+ @babel\runtime\
+ @electron-toolkit\
+ preload\
+ utils\
+ @modelcontextprotocol\sdk\ (Official MCP SDK v1.13.1)
+ @uni\runtime\
+ accepts, argparse, body-parser, bytes, ... (Express deps)
+ content-disposition, content-type, cookie, ...
+ cors\
+ cross-env\
+ cross-spawn\
+ debug\
+ depd\
+ electron-settings\ (Settings persistence)
+ electron-updater\ (Auto-update)
+ electron-window-state\ (Window state persistence)
+ encodeurl, ee-first, etag, ...
+ eventsource\
+ eventsource-parser\
+ express\ (HTTP server for MCP proxy)
+ express-rate-limit\
+ fast-deep-equal, fast-json-stable-stringify\
+ finalhandler, forwarded, fresh\
+ fs-extra, function-bind, graceful-fs\
+ get-intrinsic, get-proto, gopd\
+ has-symbols, hasown\
+ http-errors, iconv-lite\
+ inherits, ipaddr.js, is-promise\
+ json-schema-traverse, media-typer, merge-descriptors\
+ mime-db, mime-types, ms\
+ negotiate, object-assign, on-finished\
+ once, parseurl, path-to-regexp\
+ proxy-addr, qs, range-parser\
+ raw-body, require-from-string\
+ router, safe-buffer, safer-buffer\
+ semver, send, serve-static\
+ setprototypeof, side-channel, side-channel-list\
+ side-channel-map, side-channel-weakmap\
+ statuses, toidentifier, tslib\
+ type-is, unpipe, utils-merge\
+ vary\
+ zod\ (Schema validation)
+ zod-to-json-schema\
+ out\
+ main\
+ index.js (Main Electron process)
+ preload\
+ index.js (Preload script)
+ renderer\
+ index.html
+ assets\
+ index-J-5aykDP.js (Renderer React bundle)
+ index-DxqrF9Fh.css
 ```
 
 ### package.json Contents:
 ```json
 {
-  "name": "Qwen",
-  "version": "1.0.3",
-  "description": "Qwen Chat",
-  "main": "./out/main/index.js",
-  "author": "qwen.ai",
-  "homepage": "https://chat.qwen.ai/",
-  "dependencies": {
-    "@ali/aes-tracker": "^3.3.11",
-    "@ali/aes-tracker-plugin-event": "^3.0.0",
-    "@ali/spark-mcp": "1.0.5-beta.12",
-    "@electron-toolkit/preload": "^3.0.1",
-    "@electron-toolkit/utils": "^4.0.0",
-    "@modelcontextprotocol/sdk": "^1.13.0",
-    "cross-env": "^7.0.3",
-    "electron-settings": "^4.0.4",
-    "electron-updater": "^6.3.9",
-    "electron-window-state": "^5.0.3",
-    "i18next": "^25.1.2",
-    "i18next-fs-backend": "^2.6.0",
-    "zod": "^3.25.67"
-  },
-  "repository": "git@gitlab.alibaba-inc.com:qwenx/qwen-electron.git"
+ "name": "Qwen",
+ "version": "1.0.3",
+ "description": "Qwen Chat",
+ "main": "./out/main/index.js",
+ "author": "qwen.ai",
+ "homepage": "https://chat.qwen.ai/",
+ "dependencies": {
+ "@ali/aes-tracker": "^3.3.11",
+ "@ali/aes-tracker-plugin-event": "^3.0.0",
+ "@ali/spark-mcp": "1.0.5-beta.12",
+ "@electron-toolkit/preload": "^3.0.1",
+ "@electron-toolkit/utils": "^4.0.0",
+ "@modelcontextprotocol/sdk": "^1.13.0",
+ "cross-env": "^7.0.3",
+ "electron-settings": "^4.0.4",
+ "electron-updater": "^6.3.9",
+ "electron-window-state": "^5.0.3",
+ "i18next": "^25.1.2",
+ "i18next-fs-backend": "^2.6.0",
+ "zod": "^3.25.67"
+ },
+ "repository": "git@gitlab.alibaba-inc.com:qwenx/qwen-electron.git"
 }
 ```
 
@@ -196,12 +195,12 @@ extracted-app\
 ## 4. MCP Implementation
 
 ### MCP SDK Found:
-- **Package:** `@modelcontextprotocol/sdk` ✅ YES
+- **Package:** `@modelcontextprotocol/sdk` YES
 - **Version:** 1.13.1
 - **Location in code:** `node_modules/@modelcontextprotocol/sdk/`
 
 ### Additional MCP Package:
-- **Package:** `@ali/spark-mcp` ✅ YES (Alibaba internal)
+- **Package:** `@ali/spark-mcp` YES (Alibaba internal)
 - **Version:** 1.0.5-beta.12
 - **Description:** "mcp proxy"
 - **Repository:** `http://gitlab.alibaba-inc.com/liveme-console/spark-mcp.git`
@@ -229,77 +228,77 @@ const { SSEClientTransport } = require("@modelcontextprotocol/sdk/client/sse.js"
 const { StreamableHTTPClientTransport } = require("@modelcontextprotocol/sdk/client/streamableHttp.js");
 
 class Proxy {
-  constructor() {
-    this.app = express();
-    this.app.use(cors());
-    this.app.use(express.json());
-    this.mcpServers = {};
-    this.clients = {};
-    
-    // HTTP endpoints for proxy access
-    this.app.get("/listTools", this.listToolsByHTTP);
-    this.app.post("/callTool", this.callToolByHTTP);
-  }
+ constructor() {
+ this.app = express();
+ this.app.use(cors());
+ this.app.use(express.json());
+ this.mcpServers = {};
+ this.clients = {};
+ 
+ // HTTP endpoints for proxy access
+ this.app.get("/listTools", this.listToolsByHTTP);
+ this.app.post("/callTool", this.callToolByHTTP);
+ }
 
-  async setMCPServers(mcpServers) {
-    this.mcpServers = { ...mcpServers };
-    this.clients = {};  // Reset clients when config changes
-  }
+ async setMCPServers(mcpServers) {
+ this.mcpServers = { ...mcpServers };
+ this.clients = {}; // Reset clients when config changes
+ }
 
-  getMCPServers() {
-    return this.mcpServers;
-  }
+ getMCPServers() {
+ return this.mcpServers;
+ }
 
-  async listTools({ serverName }) {
-    const client = await this.getClient(serverName);
-    if (!client) throw new Error(`Mcp client not found: ${serverName}`);
-    return client.listTools();
-  }
+ async listTools({ serverName }) {
+ const client = await this.getClient(serverName);
+ if (!client) throw new Error(`Mcp client not found: ${serverName}`);
+ return client.listTools();
+ }
 
-  async callTool({ serverName, toolName, toolArguments }) {
-    const client = await this.getClient(serverName);
-    if (!client) throw new Error(`Mcp client not found: ${serverName}`);
-    return client.callTool({
-      name: toolName,
-      arguments: toolArguments
-    });
-  }
+ async callTool({ serverName, toolName, toolArguments }) {
+ const client = await this.getClient(serverName);
+ if (!client) throw new Error(`Mcp client not found: ${serverName}`);
+ return client.callTool({
+ name: toolName,
+ arguments: toolArguments
+ });
+ }
 
-  async getClient(serverName) {
-    const config = this.mcpServers[serverName];
-    if (!config) throw new Error(`Server configuration not found: ${serverName}`);
-    if (this.clients[serverName]) return this.clients[serverName];
+ async getClient(serverName) {
+ const config = this.mcpServers[serverName];
+ if (!config) throw new Error(`Server configuration not found: ${serverName}`);
+ if (this.clients[serverName]) return this.clients[serverName];
 
-    const client = new Client(
-      { name: serverName, version: "1.0.0" },
-      { capabilities: { prompts: {}, resources: {}, tools: {} } }
-    );
+ const client = new Client(
+ { name: serverName, version: "1.0.0" },
+ { capabilities: { prompts: {}, resources: {}, tools: {} } }
+ );
 
-    const transportType = config?.transportType;
-    const sseURL = config?.url;
-    let transport;
+ const transportType = config?.transportType;
+ const sseURL = config?.url;
+ let transport;
 
-    if (transportType === "httpStream") {
-      transport = new StreamableHTTPClientTransport(new URL(sseURL));
-    } else if (transportType === "sse") {
-      transport = new SSEClientTransport(new URL(sseURL));
-    } else {
-      // Default: stdio
-      transport = new StdioClientTransport(config);
-    }
+ if (transportType === "httpStream") {
+ transport = new StreamableHTTPClientTransport(new URL(sseURL));
+ } else if (transportType === "sse") {
+ transport = new SSEClientTransport(new URL(sseURL));
+ } else {
+ // Default: stdio
+ transport = new StdioClientTransport(config);
+ }
 
-    await client.connect(transport);
+ await client.connect(transport);
 
-    // Only cache stdio clients (HTTP/SSE are stateless per request)
-    if (transportType === "stdio" || !sseURL) {
-      this.clients[serverName] = client;
-    }
-    return client;
-  }
+ // Only cache stdio clients (HTTP/SSE are stateless per request)
+ if (transportType === "stdio" || !sseURL) {
+ this.clients[serverName] = client;
+ }
+ return client;
+ }
 
-  startHTTP(port) {
-    this.app.listen(port || 3000);
-  }
+ startHTTP(port) {
+ this.app.listen(port || 3000);
+ }
 }
 ```
 
@@ -309,13 +308,13 @@ The config format stored via `electron-settings` under key `mcp_config`:
 
 ```json
 {
-  "serverName": {
-    "command": "bun",           // or "uvx", or full path
-    "args": ["x", "-y", "@modelcontextprotocol/server-filesystem", "/path"],
-    "env": { "PATH": "...", "API_KEY": "..." },
-    "transportType": "stdio",   // or "sse", or "httpStream"
-    "url": "http://..."         // only for SSE/HTTP transports
-  }
+ "serverName": {
+ "command": "bun", // or "uvx", or full path
+ "args": ["x", "-y", "@modelcontextprotocol/server-filesystem", "/path"],
+ "env": { "PATH": "...", "API_KEY": "..." },
+ "transportType": "stdio", // or "sse", or "httpStream"
+ "url": "http://..." // only for SSE/HTTP transports
+ }
 }
 ```
 
@@ -330,33 +329,33 @@ The config format stored via `electron-settings` under key `mcp_config`:
 
 ```javascript
 function adaptConfig(configs) {
-  for (const key in configs) {
-    const config = configs[key];
-    let cmd = config.command;
-    
-    // Replace "npx" or "bun" with bundled bun.exe
-    if (cmd === "npx" || cmd === "bun") {
-      cmd = getBunPath();  // Points to resources/bun/bun.exe
-      if (config.command === "npx") {
-        config.args ||= [];
-        if (!config.args.includes("-y")) config.args.unshift("-y");
-        if (!config.args.includes("x")) config.args.unshift("x");
-      }
-    }
-    
-    // Replace "uvx" with bundled uvx.exe
-    if (cmd === "uvx") {
-      cmd = getUvxPath();  // Points to resources/python/uvx.exe
-    }
-    
-    config.command = cmd;
-    
-    // Set PATH environment
-    const pathToMyBin = path.join(electron.app.getAppPath(), "resources", "bin");
-    const PATH = [pathToMyBin, "/usr/local/bin", "/usr/bin", "/bin", "/usr/sbin", "/sbin"].join(":");
-    config.env = { PATH, ...process.env, ...config.env };
-  }
-  return configs;
+ for (const key in configs) {
+ const config = configs[key];
+ let cmd = config.command;
+ 
+ // Replace "npx" or "bun" with bundled bun.exe
+ if (cmd === "npx" || cmd === "bun") {
+ cmd = getBunPath(); // Points to resources/bun/bun.exe
+ if (config.command === "npx") {
+ config.args ||= [];
+ if (!config.args.includes("-y")) config.args.unshift("-y");
+ if (!config.args.includes("x")) config.args.unshift("x");
+ }
+ }
+ 
+ // Replace "uvx" with bundled uvx.exe
+ if (cmd === "uvx") {
+ cmd = getUvxPath(); // Points to resources/python/uvx.exe
+ }
+ 
+ config.command = cmd;
+ 
+ // Set PATH environment
+ const pathToMyBin = path.join(electron.app.getAppPath(), "resources", "bin");
+ const PATH = [pathToMyBin, "/usr/local/bin", "/usr/bin", "/bin", "/usr/sbin", "/sbin"].join(":");
+ config.env = { PATH, ...process.env, ...config.env };
+ }
+ return configs;
 }
 ```
 
@@ -371,36 +370,36 @@ function adaptConfig(configs) {
 - [ ] Other
 
 ### URL Confirmed:
-- **Base URL:** `https://chat.qwen.ai` ✅ YES
+- **Base URL:** `https://chat.qwen.ai` YES
 - **Code:** `const WEBVIEW_URL = \`https://${""}chat.qwen.ai\`;`
 - **User-Agent:** Modified to include `AliDesktop(QWENCHAT/1.0.3)` suffix
 
 ### Script Injection:
-- **Does it inject scripts into the webview?** ✅ YES (via `webview.executeJavaScript()`)
-- **Preload script found?** ✅ YES
+- **Does it inject scripts into the webview?** YES (via `webview.executeJavaScript()`)
+- **Preload script found?** YES
 - **Preload script location:** `out/preload/index.js` (for main window), and `file://${window.electronAPI.PRELOAD_FILE_PATH}` for webview
 
 The injected script in the webview is a **key sequence detector** (easter egg):
 ```javascript
 (function() {
-  let keySequence = [];
-  let lastKeyTime = 0;
-  document.addEventListener('keydown', function(event) {
-    const now = Date.now();
-    const key = event.key;
-    if (now - lastKeyTime > 3000) {
-      keySequence = [key];
-      lastKeyTime = now;
-      return;
-    }
-    keySequence.push(key);
-    lastKeyTime = now;
-    if (keySequence.length > 11) keySequence.shift();
-    if (keySequence.join('') === 'woshi149205') {
-      window.electron && window.electron.ipcRenderer.sendToHost('EASTER_EGG_ACTIVATED');
-      keySequence = [];
-    }
-  }, true);
+ let keySequence = [];
+ let lastKeyTime = 0;
+ document.addEventListener('keydown', function(event) {
+ const now = Date.now();
+ const key = event.key;
+ if (now - lastKeyTime > 3000) {
+ keySequence = [key];
+ lastKeyTime = now;
+ return;
+ }
+ keySequence.push(key);
+ lastKeyTime = now;
+ if (keySequence.length > 11) keySequence.shift();
+ if (keySequence.join('') === 'woshi149205') {
+ window.electron && window.electron.ipcRenderer.sendToHost('EASTER_EGG_ACTIVATED');
+ keySequence = [];
+ }
+ }, true);
 })();
 ```
 
@@ -414,57 +413,57 @@ const preload = require("@electron-toolkit/preload");
 const path = require("path");
 
 class EventEmitter {
-  listeners = {};
-  on(eventName, listener) {
-    if (!this.listeners[eventName]) this.listeners[eventName] = [];
-    this.listeners[eventName].push(listener);
-  }
-  emit(eventName, ...args) {
-    const listeners = this.listeners[eventName];
-    if (listeners) listeners.forEach((listener) => listener(...args));
-  }
+ listeners = {};
+ on(eventName, listener) {
+ if (!this.listeners[eventName]) this.listeners[eventName] = [];
+ this.listeners[eventName].push(listener);
+ }
+ emit(eventName, ...args) {
+ const listeners = this.listeners[eventName];
+ if (listeners) listeners.forEach((listener) => listener(...args));
+ }
 }
 
 const events = new EventEmitter();
 const api = {
-  PRELOAD_FILE_PATH: path.join(__dirname, "../preload/index.js"),
-  open_devtool: () => electron.ipcRenderer.invoke("open_devtool"),
-  toggle_hidden_devtools: () => electron.ipcRenderer.invoke("toggle_hidden_devtools"),
-  get_app_version: () => electron.ipcRenderer.invoke("get_app_version"),
-  get_platform_info: () => electron.ipcRenderer.invoke("get_platform_info"),
-  open_external_link: (url) => electron.ipcRenderer.invoke("open_external_link", url),
-  show_native_dialog: (options) => electron.ipcRenderer.invoke("show_native_dialog", options),
-  request_file_access: (purpose) => electron.ipcRenderer.invoke("request_file_access", purpose),
-  
-  // MCP Methods
-  mcp_client_connect: () => electron.ipcRenderer.invoke("mcp_client_connect"),
-  mcp_client_close: () => electron.ipcRenderer.invoke("mcp_client_close"),
-  mcp_client_tool_list: (serviceName) => electron.ipcRenderer.invoke("mcp_client_tool_list", serviceName),
-  mcp_client_get_config: () => electron.ipcRenderer.invoke("mcp_client_get_config"),
-  mcp_client_tool_call: (options) => electron.ipcRenderer.invoke("mcp_client_tool_call", options),
-  mcp_client_update_config: (config = {}) => electron.ipcRenderer.invoke("mcp_client_update_config", config),
-  
-  switch_theme: (theme) => electron.ipcRenderer.invoke("switch_theme", theme),
-  switch_ln: (language) => electron.ipcRenderer.invoke("switch_ln", language),
-  update_title_bar_for_system_theme: (isDark) => electron.ipcRenderer.invoke("update_title_bar_for_system_theme", isDark),
-  
-  // Event system
-  on_event: (type, callback) => { events.on(type, callback); },
-  send_event: (data) => { electron.ipcRenderer.send("event_to_main", data); }
+ PRELOAD_FILE_PATH: path.join(__dirname, "../preload/index.js"),
+ open_devtool: () => electron.ipcRenderer.invoke("open_devtool"),
+ toggle_hidden_devtools: () => electron.ipcRenderer.invoke("toggle_hidden_devtools"),
+ get_app_version: () => electron.ipcRenderer.invoke("get_app_version"),
+ get_platform_info: () => electron.ipcRenderer.invoke("get_platform_info"),
+ open_external_link: (url) => electron.ipcRenderer.invoke("open_external_link", url),
+ show_native_dialog: (options) => electron.ipcRenderer.invoke("show_native_dialog", options),
+ request_file_access: (purpose) => electron.ipcRenderer.invoke("request_file_access", purpose),
+ 
+ // MCP Methods
+ mcp_client_connect: () => electron.ipcRenderer.invoke("mcp_client_connect"),
+ mcp_client_close: () => electron.ipcRenderer.invoke("mcp_client_close"),
+ mcp_client_tool_list: (serviceName) => electron.ipcRenderer.invoke("mcp_client_tool_list", serviceName),
+ mcp_client_get_config: () => electron.ipcRenderer.invoke("mcp_client_get_config"),
+ mcp_client_tool_call: (options) => electron.ipcRenderer.invoke("mcp_client_tool_call", options),
+ mcp_client_update_config: (config = {}) => electron.ipcRenderer.invoke("mcp_client_update_config", config),
+ 
+ switch_theme: (theme) => electron.ipcRenderer.invoke("switch_theme", theme),
+ switch_ln: (language) => electron.ipcRenderer.invoke("switch_ln", language),
+ update_title_bar_for_system_theme: (isDark) => electron.ipcRenderer.invoke("update_title_bar_for_system_theme", isDark),
+ 
+ // Event system
+ on_event: (type, callback) => { events.on(type, callback); },
+ send_event: (data) => { electron.ipcRenderer.send("event_to_main", data); }
 };
 
 if (process.contextIsolated) {
-  try {
-    electron.contextBridge.exposeInMainWorld("electron", preload.electronAPI);
-    electron.contextBridge.exposeInMainWorld("electronAPI", api);
-  } catch (error) { console.error(error); }
+ try {
+ electron.contextBridge.exposeInMainWorld("electron", preload.electronAPI);
+ electron.contextBridge.exposeInMainWorld("electronAPI", api);
+ } catch (error) { console.error(error); }
 } else {
-  window.electron = preload.electronAPI;
-  window.electronAPI = api;
+ window.electron = preload.electronAPI;
+ window.electronAPI = api;
 }
 
 electron.ipcRenderer.on("event_from_main", (_, { type, payload }) => {
-  events.emit(type, payload);
+ events.emit(type, payload);
 });
 ```
 
@@ -492,19 +491,19 @@ This means **chat.qwen.ai's web UI is specifically designed to detect and use th
 ### Tool Call Flow:
 ```
 User types in webview (chat.qwen.ai)
-  → Web UI sends message to Qwen LLM (via web API)
-  → LLM responds with tool_call request
-  → Web UI calls window.electronAPI.mcp_client_tool_call({ serverName, toolName, toolArguments })
-    → IPC: renderer → main process
-      → Main process: sparkMcpProxy.callTool({ serverName, toolName, toolArguments })
-        → MCP Client (from @modelcontextprotocol/sdk)
-          → MCP Server (stdio/http/sse)
-            → Returns tool result
-      → Main process returns result via IPC
-    → Web UI receives tool result
-  → Web UI sends tool result back to Qwen LLM
-  → LLM generates final response
-  → Response displayed in webview
+ → Web UI sends message to Qwen LLM (via web API)
+ → LLM responds with tool_call request
+ → Web UI calls window.electronAPI.mcp_client_tool_call({ serverName, toolName, toolArguments })
+ → IPC: renderer → main process
+ → Main process: sparkMcpProxy.callTool({ serverName, toolName, toolArguments })
+ → MCP Client (from @modelcontextprotocol/sdk)
+ → MCP Server (stdio/http/sse)
+ → Returns tool result
+ → Main process returns result via IPC
+ → Web UI receives tool result
+ → Web UI sends tool result back to Qwen LLM
+ → LLM generates final response
+ → Response displayed in webview
 ```
 
 ### IPC Channels (Main Process handlers):
@@ -516,10 +515,10 @@ ipcMain.handle("toggle_hidden_devtools", toggleHiddenDevTools);
 ipcMain.handle("open_external_link", openExternalLink);
 ipcMain.handle("show_native_dialog", showNativeDialog);
 ipcMain.handle("request_file_access", requestFileAccess);
-ipcMain.handle("mcp_client_tool_list", mcpClientToolList);     // MCP
-ipcMain.handle("mcp_client_tool_call", mcpClientToolCall);     // MCP
+ipcMain.handle("mcp_client_tool_list", mcpClientToolList); // MCP
+ipcMain.handle("mcp_client_tool_call", mcpClientToolCall); // MCP
 ipcMain.handle("mcp_client_update_config", mcpClientUpdateConfig); // MCP
-ipcMain.handle("mcp_client_get_config", mcpClientGetConfig);   // MCP
+ipcMain.handle("mcp_client_get_config", mcpClientGetConfig); // MCP
 ipcMain.handle("webview-loaded", webviewLoaded);
 ipcMain.handle("switch_theme", switchTheme);
 ipcMain.handle("switch_ln", switchLn);
@@ -539,13 +538,13 @@ ipcMain.handle("get_language", () => i18next.language);
 const mcpServer = new sparkMcp.Proxy();
 
 const mcpClientToolList = async (_, serverName) => {
-  try {
-    const list = await mcpServer.listTools({ serverName });
-    return list;
-  } catch (e) {
-    console.log("mcpClientToolList err", e);
-    throw e;
-  }
+ try {
+ const list = await mcpServer.listTools({ serverName });
+ return list;
+ } catch (e) {
+ console.log("mcpClientToolList err", e);
+ throw e;
+ }
 };
 
 const mcpClientGetConfig = async () => mcpServer.getMCPServers();
@@ -553,31 +552,31 @@ const mcpClientGetConfig = async () => mcpServer.getMCPServers();
 const mcpClientToolCall = async (_, params) => mcpServer.callTool(params);
 
 const mcpClientUpdateConfig = async (_, config) => {
-  try {
-    mcpServer.setMCPServers(adaptConfig(config));
-    settings.set("mcp_config", config);
-    return mcpClientGetConfig();
-  } catch (err) {
-    throw err;
-  }
+ try {
+ mcpServer.setMCPServers(adaptConfig(config));
+ settings.set("mcp_config", config);
+ return mcpClientGetConfig();
+ } catch (err) {
+ throw err;
+ }
 };
 
 // File access dialog
 const requestFileAccess = async (_, purpose, returnFile) => {
-  const { filePaths } = await electron.dialog.showOpenDialog({
-    properties: ["openFile"],
-    title: purpose
-  });
-  if (!returnFile) return { filePath: filePaths[0] };
-  const file = await fs.readFile(filePaths[0], "utf-8");
-  return { filePath: filePaths[0], file };
+ const { filePaths } = await electron.dialog.showOpenDialog({
+ properties: ["openFile"],
+ title: purpose
+ });
+ if (!returnFile) return { filePath: filePaths[0] };
+ const file = await fs.readFile(filePaths[0], "utf-8");
+ return { filePath: filePaths[0], file };
 };
 ```
 
 #### Exposed APIs (Renderer/Window):
 ```javascript
-window.electron        // @electron-toolkit/preload's electronAPI
-window.electronAPI     // Custom API with MCP methods
+window.electron // @electron-toolkit/preload's electronAPI
+window.electronAPI // Custom API with MCP methods
 ```
 
 #### Context Bridge:
@@ -587,10 +586,10 @@ electron.contextBridge.exposeInMainWorld("electronAPI", api);
 ```
 
 ### Channels Found:
-- `mcp_client_tool_list` ✅ 
-- `mcp_client_tool_call` ✅ 
-- `mcp_client_update_config` ✅ 
-- `mcp_client_get_config` ✅ 
+- `mcp_client_tool_list` 
+- `mcp_client_tool_call` 
+- `mcp_client_update_config` 
+- `mcp_client_get_config` 
 - `mcp_client_connect` (exposed in preload but NOT registered in main - likely unused)
 - `mcp_client_close` (exposed in preload but NOT registered in main - likely unused)
 - `get_app_version`, `get_platform_info`, `open_devtool`, `toggle_hidden_devtools`
@@ -603,25 +602,25 @@ electron.contextBridge.exposeInMainWorld("electronAPI", api);
 ## 8. Network Traffic Analysis
 
 ### DevTools Accessibility:
-- **Can open DevTools?** ✅ YES
+- **Can open DevTools?** YES
 - **Method used:** 
-  - `Ctrl+Shift+I` (standard Electron)
-  - Easter egg: type `woshi149205` in the webview
-  - `window.electronAPI.toggle_hidden_devtools()` via preload
+- `Ctrl+Shift+I` (standard Electron)
+- Easter egg: type `woshi149205` in the webview
+- `window.electronAPI.toggle_hidden_devtools()` via preload
 
 ### Webview Configuration:
 ```javascript
 {
-  webPreferences: {
-    preload: path.join(__dirname, "../preload/index.js"),
-    sandbox: false,
-    webviewTag: true,
-    nodeIntegration: false,
-    contextIsolation: true,
-    nodeIntegrationInSubFrames: true,
-    webSecurity: false,
-    allowRunningInsecureContent: true
-  }
+ webPreferences: {
+ preload: path.join(__dirname, "../preload/index.js"),
+ sandbox: false,
+ webviewTag: true,
+ nodeIntegration: false,
+ contextIsolation: true,
+ nodeIntegrationInSubFrames: true,
+ webSecurity: false,
+ allowRunningInsecureContent: true
+ }
 }
 ```
 
@@ -632,12 +631,12 @@ The webview loads `chat.qwen.ai` with:
 
 ### JavaScript Console Findings:
 ```javascript
-window.electronAPI.mcp_client_tool_list     // Function - list tools for a server
-window.electronAPI.mcp_client_tool_call     // Function - call a tool
+window.electronAPI.mcp_client_tool_list // Function - list tools for a server
+window.electronAPI.mcp_client_tool_call // Function - call a tool
 window.electronAPI.mcp_client_update_config // Function - update MCP config
-window.electronAPI.mcp_client_get_config    // Function - get MCP servers config
-window.electronAPI.request_file_access      // Function - native file dialog
-window.electronAPI.open_external_link       // Function - open URL in browser
+window.electronAPI.mcp_client_get_config // Function - get MCP servers config
+window.electronAPI.request_file_access // Function - native file dialog
+window.electronAPI.open_external_link // Function - open URL in browser
 ```
 
 ---
@@ -646,7 +645,6 @@ window.electronAPI.open_external_link       // Function - open URL in browser
 
 ### Files Exported:
 All important files have been copied to `extracted-files/` folder:
-
 - [x] `main.js` (main entry point - `out/main/index.js`)
 - [x] `preload.js` (`out/preload/index.js`)
 - [x] `spark-mcp/Proxy.js` (MCP proxy implementation)
@@ -658,25 +656,25 @@ All important files have been copied to `extracted-files/` folder:
 ### File List:
 ```
 extracted-files/
-├── package.json
-├── out/
-│   ├── main/
-│   │   └── index.js              (Main Electron process - FULL)
-│   ├── preload/
-│   │   └── index.js              (Preload script - FULL)
-│   └── renderer/
-│       ├── index.html
-│       └── assets/
-│           └── index-J-5aykDP.js (Renderer React bundle)
-└── node_modules/
-    └── @ali/
-        └── spark-mcp/
-            ├── package.json
-            ├── dist/
-            │   └── cjs/
-            │       ├── index.js   (MCP proxy entry)
-            │       └── Proxy.js   (MCP proxy implementation)
-            └── dist/cjs/main.js
+ package.json
+ out/
+ main/
+ index.js (Main Electron process - FULL)
+ preload/
+ index.js (Preload script - FULL)
+ renderer/
+ index.html
+ assets/
+ index-J-5aykDP.js (Renderer React bundle)
+ node_modules/
+ @ali/
+ spark-mcp/
+ package.json
+ dist/
+ cjs/
+ index.js (MCP proxy entry)
+ Proxy.js (MCP proxy implementation)
+ dist/cjs/main.js
 ```
 
 ---
@@ -689,74 +687,74 @@ The Qwen Desktop app is a **hybrid architecture**:
 
 1. **Electron Main Process** runs the MCP server clients using `@ali/spark-mcp` (a proxy wrapper around `@modelcontextprotocol/sdk`)
 2. **Electron Renderer** is a minimal React shell that:
-   - Creates a `<webview>` element loading `https://chat.qwen.ai`
-   - Injects the preload script into the webview
-   - Handles theme switching and window controls
+- Creates a `<webview>` element loading `https://chat.qwen.ai`
+- Injects the preload script into the webview
+- Handles theme switching and window controls
 3. **The Web UI (chat.qwen.ai)** does ALL the chat logic - it detects when running inside the desktop app and uses `window.electronAPI` to access MCP tools
 4. **MCP servers** are spawned as child processes (stdio transport) using bundled runtimes (`bun`, `uvx`)
 
 ### How MCP is Integrated:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    Electron Main Process                     │
-│                                                              │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │  sparkMcp.Proxy() (@ali/spark-mcp)                   │    │
-│  │  ├── listTools(serverName) → MCP SDK listTools()    │    │
-│  │  ├── callTool(params) → MCP SDK callTool()          │    │
-│  │  ├── setMCPServers(config) → creates Client per srv  │    │
-│  │  └── getMCPServers() → returns config               │    │
-│  │                                                      │    │
-│  │  Uses @modelcontextprotocol/sdk v1.13.1:            │    │
-│  │  ├── StdioClientTransport (default)                  │    │
-│  │  ├── SSEClientTransport                              │    │
-│  │  └── StreamableHTTPClientTransport                   │    │
-│  └──────────────────────┬───────────────────────────────┘    │
-│                         │ IPC handlers                       │
-│                         ▼                                    │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │  ipcMain.handle("mcp_client_tool_list", ...)        │    │
-│  │  ipcMain.handle("mcp_client_tool_call", ...)        │    │
-│  │  ipcMain.handle("mcp_client_update_config", ...)    │    │
-│  │  ipcMain.handle("mcp_client_get_config", ...)       │    │
-│  └──────────────────────┬───────────────────────────────┘    │
-└─────────────────────────┼────────────────────────────────────┘
-                          │ contextBridge
-                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│                  Webview (chat.qwen.ai)                      │
-│                                                              │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │  window.electronAPI (exposed via preload)            │    │
-│  │  ├── mcp_client_tool_list(serverName)                │    │
-│  │  ├── mcp_client_tool_call({serverName,toolName,     │    │
-│  │  │                        toolArguments})            │    │
-│  │  ├── mcp_client_update_config(config)                │    │
-│  │  ├── mcp_client_get_config()                         │    │
-│  │  ├── request_file_access(purpose, returnFile)        │    │
-│  │  ├── open_external_link(url)                         │    │
-│  │  └── show_native_dialog({title, message})            │    │
-│  └──────────────────────┬───────────────────────────────┘    │
-│                         │                                    │
-│  ┌──────────────────────▼───────────────────────────────┐    │
-│  │  chat.qwen.ai Web UI                                  │    │
-│  │  - Chat interface                                     │    │
-│  │  - LLM API calls (handled by web UI)                  │    │
-│  │  - MCP tool detection via electronAPI                 │    │
-│  │  - Tool call loop in web UI                           │    │
-│  └──────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│              MCP Servers (Child Processes)                    │
-│                                                              │
-│  stdio: bun x @modelcontextprotocol/server-filesystem       │
-│  stdio: uvx mcp-server-sqlite                                │
-│  SSE:   http://remote-server/sse                             │
-│  HTTP:  http://remote-server/stream                           │
-└─────────────────────────────────────────────────────────────┘
+
+ Electron Main Process 
+ 
+ 
+ sparkMcp.Proxy() (@ali/spark-mcp) 
+ listTools(serverName) → MCP SDK listTools() 
+ callTool(params) → MCP SDK callTool() 
+ setMCPServers(config) → creates Client per srv 
+ getMCPServers() → returns config 
+ 
+ Uses @modelcontextprotocol/sdk v1.13.1: 
+ StdioClientTransport (default) 
+ SSEClientTransport 
+ StreamableHTTPClientTransport 
+ 
+ IPC handlers 
+ 
+ 
+ ipcMain.handle("mcp_client_tool_list", ...) 
+ ipcMain.handle("mcp_client_tool_call", ...) 
+ ipcMain.handle("mcp_client_update_config", ...) 
+ ipcMain.handle("mcp_client_get_config", ...) 
+ 
+
+ contextBridge
+ 
+
+ Webview (chat.qwen.ai) 
+ 
+ 
+ window.electronAPI (exposed via preload) 
+ mcp_client_tool_list(serverName) 
+ mcp_client_tool_call({serverName,toolName, 
+ toolArguments}) 
+ mcp_client_update_config(config) 
+ mcp_client_get_config() 
+ request_file_access(purpose, returnFile) 
+ open_external_link(url) 
+ show_native_dialog({title, message}) 
+ 
+ 
+ 
+ chat.qwen.ai Web UI 
+- Chat interface 
+- LLM API calls (handled by web UI) 
+- MCP tool detection via electronAPI 
+- Tool call loop in web UI 
+ 
+
+ 
+ 
+
+ MCP Servers (Child Processes) 
+ 
+ stdio: bun x @modelcontextprotocol/server-filesystem 
+ stdio: uvx mcp-server-sqlite 
+ SSE: http://remote-server/sse 
+ HTTP: http://remote-server/stream 
+
 ```
 
 ### Approach for Linux Version:
@@ -804,7 +802,7 @@ Based on the findings, the Linux version should use the **exact same approach**:
 ```javascript
 const BASE_URL = "https://download.qwen.ai/";
 // Platform-specific paths:
-// macOS:  macos/{arch}/
+// macOS: macos/{arch}/
 // Windows: windows/{arch}/
 // Linux would need: linux/{arch}/ (NOT implemented)
 ```
@@ -827,9 +825,9 @@ const BASE_URL = "https://download.qwen.ai/";
 ### Platform Support in Code:
 ```javascript
 function getPlatformDir(platform = os.platform(), arch = os.arch()) {
-  if (platform === "darwin") return arch === "arm64" ? "mac-arm64" : "mac-x64";
-  if (platform === "win32") return "win-x64";
-  throw new Error(`Unsupported platform: ${platform}, arch: ${arch}`);
+ if (platform === "darwin") return arch === "arm64" ? "mac-arm64" : "mac-x64";
+ if (platform === "win32") return "win-x64";
+ throw new Error(`Unsupported platform: ${platform}, arch: ${arch}`);
 }
 ```
 **Note: Linux is NOT supported in the current code** - throws an error.

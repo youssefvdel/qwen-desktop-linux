@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Qwen Desktop for Linux with full MCP support",
   "main": "./out/main/index.js",
-  "author": "youssefvdel",
+  "author": "youssefvdel <youssefvdel@gmail.com>",
   "homepage": "https://chat.qwen.ai/",
   "repository": {
     "type": "git",

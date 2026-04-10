@@ -8,23 +8,21 @@
 
 ---
 
-## ✨ Features
-
+## Features
 - 🤖 **Full Qwen AI Chat** - Direct access to chat.qwen.ai with desktop app experience
-- 🔌 **MCP Support** - Connect to filesystem, browser automation, custom tools
-- 📁 **File Access** - Native file picker and file system access
-- 🖥️ **System Tray** - Linux system tray integration
-- 🌓 **Theme Support** - Light/dark mode with system theme detection
-- 🌍 **i18n** - 12 languages supported
-- 📦 **Multiple Formats** - AppImage, .deb, .rpm packages
-- 🔒 **Secure** - Context isolation, sandboxed webview, fuse security
+- **MCP Support** - Connect to filesystem, browser automation, custom tools
+- **File Access** - Native file picker and file system access
+- **System Tray** - Linux system tray integration
+- **Theme Support** - Light/dark mode with system theme detection
+- **i18n** - 12 languages supported
+- **Multiple Formats** - AppImage, .deb, .rpm packages
+- **Secure** - Context isolation, sandboxed webview, fuse security
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
-
 - Node.js 22+
 - npm or yarn
 - Linux (x64 or arm64)
@@ -49,14 +47,14 @@ npm start
 npm run make
 
 # Build specific format
-npm run make:appimage  # Universal portable app
-npm run make:deb       # Debian/Ubuntu
-npm run make:rpm       # Fedora/RHEL
+npm run make:appimage # Universal portable app
+npm run make:deb # Debian/Ubuntu
+npm run make:rpm # Fedora/RHEL
 ```
 
 ---
 
-## 📦 Installation (After Build)
+## Installation (After Build)
 
 ### AppImage (Recommended - Works on All Distros)
 
@@ -72,7 +70,7 @@ chmod +x Qwen-1.0.0.AppImage
 
 ```bash
 sudo dpkg -i qwen-desktop_1.0.0_amd64.deb
-sudo apt-get install -f  # Install dependencies
+sudo apt-get install -f # Install dependencies
 
 # Launch from applications menu or:
 qwen-desktop
@@ -89,7 +87,7 @@ qwen-desktop
 
 ---
 
-## 🔌 MCP Configuration
+## MCP Configuration
 
 ### What is MCP?
 
@@ -109,27 +107,27 @@ Add this to your MCP config (via the app's settings or programmatically):
 
 ```json
 {
-  "filesystem": {
-    "command": "bun",
-    "args": [
-      "x",
-      "-y",
-      "@modelcontextprotocol/server-filesystem",
-      "/home/user/Documents",
-      "/home/user/Desktop"
-    ],
-    "transportType": "stdio"
-  },
-  "browser": {
-    "command": "uvx",
-    "args": ["@anthropic/mcp-server-playwright"],
-    "transportType": "stdio"
-  },
-  "sqlite": {
-    "command": "uvx",
-    "args": ["mcp-server-sqlite", "--db-path", "/home/user/data.db"],
-    "transportType": "stdio"
-  }
+ "filesystem": {
+ "command": "bun",
+ "args": [
+ "x",
+ "-y",
+ "@modelcontextprotocol/server-filesystem",
+ "/home/user/Documents",
+ "/home/user/Desktop"
+ ],
+ "transportType": "stdio"
+ },
+ "browser": {
+ "command": "uvx",
+ "args": ["@anthropic/mcp-server-playwright"],
+ "transportType": "stdio"
+ },
+ "sqlite": {
+ "command": "uvx",
+ "args": ["mcp-server-sqlite", "--db-path", "/home/user/data.db"],
+ "transportType": "stdio"
+ }
 }
 ```
 
@@ -145,104 +143,104 @@ Add this to your MCP config (via the app's settings or programmatically):
 
 The app automatically replaces:
 - `npx` → bundled `bun` runtime
-- `bun` → bundled `bun` runtime  
+- `bun` → bundled `bun` runtime 
 - `uvx` → bundled `uvx` runtime
 
 This ensures MCP servers work without requiring system-wide installations!
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
-┌─────────────────────────────────────────────────┐
-│           Qwen Desktop (Electron)                │
-│                                                  │
-│  ┌───────────────────────────────────────────┐  │
-│  │  Main Process                             │  │
-│  │  ├─ MCP Proxy (McpProxy)                  │  │
-│  │  │  ├─ @modelcontextprotocol/sdk v1.13.1 │  │
-│  │  │  ├─ StdioClientTransport              │  │
-│  │  │  ├─ SSEClientTransport                │  │
-│  │  │  └─ StreamableHTTPClientTransport     │  │
-│  │  ├─ IPC Handlers                          │  │
-│  │  └─ Runtime Manager (bun, uvx)            │  │
-│  └───────────────────┬───────────────────────┘  │
-│                      │ contextBridge            │
-│                      ▼                          │
-│  ┌───────────────────────────────────────────┐  │
-│  │  WebView (chat.qwen.ai)                   │  │
-│  │  ├─ Preload Script                        │  │
-│  │  │  └─ window.electronAPI                 │  │
-│  │  │     ├─ mcp_client_tool_list()          │  │
-│  │  │     ├─ mcp_client_tool_call()          │  │
-│  │  │     ├─ mcp_client_update_config()      │  │
-│  │  │     └─ request_file_access()           │  │
-│  │  └─ chat.qwen.ai Web UI                   │  │
-│  │     └─ Detects desktop via User-Agent     │  │
-│  └───────────────────────────────────────────┘  │
-│                                                  │
-│  ┌───────────────────────────────────────────┐  │
-│  │  Bundled Runtimes                         │  │
-│  │  ├─ resources/bun/linux-x64/bun           │  │
-│  │  └─ resources/uv/linux-x64/uvx            │  │
-│  └───────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────┘
-                      │ stdio/sse/http
-                      ▼
-┌─────────────────────────────────────────────────┐
-│           MCP Servers (Child Processes)          │
-│  ├─ Filesystem Server                            │
-│  ├─ Browser Server (Playwright)                  │
-│  └─ Custom Tool Servers                          │
-└─────────────────────────────────────────────────┘
+
+ Qwen Desktop (Electron) 
+ 
+ 
+ Main Process 
+ MCP Proxy (McpProxy) 
+ @modelcontextprotocol/sdk v1.13.1 
+ StdioClientTransport 
+ SSEClientTransport 
+ StreamableHTTPClientTransport 
+ IPC Handlers 
+ Runtime Manager (bun, uvx) 
+ 
+ contextBridge 
+ 
+ 
+ WebView (chat.qwen.ai) 
+ Preload Script 
+ window.electronAPI 
+ mcp_client_tool_list() 
+ mcp_client_tool_call() 
+ mcp_client_update_config() 
+ request_file_access() 
+ chat.qwen.ai Web UI 
+ Detects desktop via User-Agent 
+ 
+ 
+ 
+ Bundled Runtimes 
+ resources/bun/linux-x64/bun 
+ resources/uv/linux-x64/uvx 
+ 
+
+ stdio/sse/http
+ 
+
+ MCP Servers (Child Processes) 
+ Filesystem Server 
+ Browser Server (Playwright) 
+ Custom Tool Servers 
+
 ```
 
 ---
 
-## 🔧 Development
+## Development
 
 ### Project Structure
 
 ```
 qwen-desktop-linux/
-├── src/
-│   ├── main/
-│   │   ├── index.ts              # Electron main process
-│   │   ├── runtime.ts            # Bundled runtime management
-│   │   └── mcp-config.ts         # MCP config adaptation
-│   ├── mcp/
-│   │   ├── index.ts              # MCP exports
-│   │   ├── proxy.ts              # MCP proxy server
-│   │   └── server-client.ts      # Individual MCP client
-│   ├── preload/
-│   │   └── index.ts              # Preload script (bridge)
-│   ├── renderer/
-│   │   └── index.html            # Minimal shell with webview
-│   └── shared/
-│       └── types.ts              # Shared TypeScript types
-├── resources/
-│   ├── icon.png                  # App icon
-│   ├── bun/linux-x64/           # Bundled bun runtime
-│   └── uv/linux-x64/            # Bundled uv/uvx
-├── scripts/
-│   └── download-runtimes.js      # Post-install setup
-├── package.json
-├── tsconfig.json
-└── forge.config.ts               # Electron Forge config
+ src/
+ main/
+ index.ts # Electron main process
+ runtime.ts # Bundled runtime management
+ mcp-config.ts # MCP config adaptation
+ mcp/
+ index.ts # MCP exports
+ proxy.ts # MCP proxy server
+ server-client.ts # Individual MCP client
+ preload/
+ index.ts # Preload script (bridge)
+ renderer/
+ index.html # Minimal shell with webview
+ shared/
+ types.ts # Shared TypeScript types
+ resources/
+ icon.png # App icon
+ bun/linux-x64/ # Bundled bun runtime
+ uv/linux-x64/ # Bundled uv/uvx
+ scripts/
+ download-runtimes.js # Post-install setup
+ package.json
+ tsconfig.json
+ forge.config.ts # Electron Forge config
 ```
 
 ### Available Scripts
 
 ```bash
-npm start              # Start in development mode
-npm run package        # Package the app
-npm run make           # Build all Linux packages
-npm run make:appimage  # Build AppImage only
-npm run make:deb       # Build .deb package
-npm run make:rpm       # Build .rpm package
-npm run lint           # Run ESLint
-npm run typecheck      # TypeScript type checking
+npm start # Start in development mode
+npm run package # Package the app
+npm run make # Build all Linux packages
+npm run make:appimage # Build AppImage only
+npm run make:deb # Build .deb package
+npm run make:rpm # Build .rpm package
+npm run lint # Run ESLint
+npm run typecheck # TypeScript type checking
 ```
 
 ### Debug Mode
@@ -258,7 +256,7 @@ DEBUG=* npm start
 
 ---
 
-## 📋 Requirements
+## Requirements
 
 ### Runtime Dependencies
 
@@ -275,7 +273,6 @@ libnotify nss atk at-spi2-atk gtk3
 ```
 
 ### System Requirements
-
 - **OS:** Linux (Kernel 4.4+)
 - **Architecture:** x86_64 or ARM64
 - **RAM:** 2GB minimum (4GB recommended)
@@ -284,56 +281,54 @@ libnotify nss atk at-spi2-atk gtk3
 
 ---
 
-## 🔒 Security
+## Security
 
 This app implements multiple security layers:
-
-- ✅ **Context Isolation** - Renderer cannot access Node.js directly
-- ✅ **Sandboxed WebView** - Webview runs in separate process
-- ✅ **Electron Fuses** - Production builds disable dangerous features
-- ✅ **No Node Integration** - Web content cannot access filesystem
-- ✅ **Explicit IPC** - All communication goes through typed handlers
-- ✅ **MCP Server Validation** - Only configured servers can connect
+- **Context Isolation** - Renderer cannot access Node.js directly
+- **Sandboxed WebView** - Webview runs in separate process
+- **Electron Fuses** - Production builds disable dangerous features
+- **No Node Integration** - Web content cannot access filesystem
+- **Explicit IPC** - All communication goes through typed handlers
+- **MCP Server Validation** - Only configured servers can connect
 
 ---
 
-## 🌍 Internationalization
+## Internationalization
 
 Supported languages:
-- 🇨🇳 简体中文 (zh-CN)
-- 🇺🇸 English (en-US)
-- 🇹🇼 繁體中文 (zh-TW)
-- 🇯🇵 日本語 (ja-JP)
-- 🇰🇷 한국어 (ko-KR)
-- 🇷🇺 Русский (ru-RU)
-- 🇩🇪 Deutsch (de-DE)
-- 🇫🇷 Français (fr-FR)
-- 🇪🇸 Español (es-ES)
-- 🇮🇹 Italiano (it-IT)
-- 🇵🇹 Português (pt-PT)
-- 🇧🇭 العربية (ar-BH)
+- (zh-CN)
+- English (en-US)
+- (zh-TW)
+- (ja-JP)
+- (ko-KR)
+- Русский (ru-RU)
+- Deutsch (de-DE)
+- Français (fr-FR)
+- Español (es-ES)
+- Italiano (it-IT)
+- Português (pt-PT)
+- العربية (ar-BH)
 
 ---
 
-## 🆚 Comparison with Official Apps
+## Comparison with Official Apps
 
 | Feature | Windows/Mac | Linux (This App) |
 |---------|-------------|------------------|
-| Chat Interface | ✅ chat.qwen.ai | ✅ chat.qwen.ai |
-| MCP Support | ✅ | ✅ |
-| File System Access | ✅ | ✅ |
-| Browser Automation | ✅ | ✅ |
-| Custom Tools | ✅ | ✅ |
-| System Tray | ✅ | ✅ |
-| Auto-Updates | ✅ | ⚠️ Manual (for now) |
-| Deep Linking | ✅ qwen:// | ✅ qwen:// |
-| Native Dialogs | ✅ | ✅ |
-| i18n | ✅ 12 languages | ✅ 12 languages |
+| Chat Interface | chat.qwen.ai | chat.qwen.ai |
+| MCP Support | | |
+| File System Access | | |
+| Browser Automation | | |
+| Custom Tools | | |
+| System Tray | | |
+| Auto-Updates | | Manual (for now) |
+| Deep Linking | qwen:// | qwen:// |
+| Native Dialogs | | |
+| i18n | 12 languages | 12 languages |
 
 ---
 
-## 🐛 Known Issues & Limitations
-
+## Known Issues & Limitations
 - **Auto-update**: Not yet configured for Linux (use package manager updates)
 - **Wayland**: May require `--enable-features=UseOzonePlatform --ozone-platform=wayland` flag
 - **AppImage**: Requires FUSE on some distros
@@ -351,14 +346,13 @@ Contributions welcome! This is a community project to bring Qwen Desktop to Linu
 
 ---
 
-## 📄 License
+## License
 
 MIT License - See LICENSE file for details
 
 ---
 
-## 🙏 Acknowledgments
-
+## Acknowledgments
 - Based on reverse engineering of the official Qwen Desktop app (Windows/Mac)
 - Uses `@modelcontextprotocol/sdk` by Anthropic
 - Bundled runtimes: [Bun](https://bun.sh/) + [uv](https://github.com/astral-sh/uv)
@@ -366,4 +360,4 @@ MIT License - See LICENSE file for details
 
 ---
 
-**Made with ❤️ for the Linux community**
+**Made with for the Linux community**

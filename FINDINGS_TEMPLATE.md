@@ -1,7 +1,7 @@
 # Qwen Desktop Windows App - Investigation Findings
 
-**Date:** [Fill in date]  
-**Windows Qwen CLI Version:** [Fill in version]  
+**Date:** [Fill in date] 
+**Windows Qwen CLI Version:** [Fill in version] 
 **Investigator:** [Who ran this]
 
 ---
@@ -13,7 +13,6 @@
 ---
 
 ## 1. App Installation Location
-
 - **Installation path:** 
 - **Version:** 
 - **App size:** 
@@ -72,7 +71,7 @@
 
 ### Transport Method:
 - [ ] stdio
-- [ ] http  
+- [ ] http 
 - [ ] sse
 - [ ] Multiple (describe: )
 
@@ -84,7 +83,7 @@
 ### MCP Server Configuration:
 ```json
 {
-  // Paste the MCP config format/structure here
+ // Paste the MCP config format/structure here
 }
 ```
 
@@ -126,13 +125,13 @@
 - **Request format:** 
 ```json
 {
-  // paste API request format
+ // paste API request format
 }
 ```
 - **Response format:** 
 ```json
 {
-  // paste API response format
+ // paste API response format
 }
 ```
 
@@ -143,7 +142,6 @@
 ### How MCP tools reach the chat:
 
 > **THIS IS THE CRITICAL PIECE - Describe exactly how MCP tool results get into the chat**
-
 - **Method:** 
 - **Code snippet showing the bridge:** 
 ```javascript
@@ -178,7 +176,7 @@
 
 ### Channels Found:
 - `mcp:start` [ ] YES [ ] NO
-- `mcp:callTool` [ ] YES [ ] NO  
+- `mcp:callTool` [ ] YES [ ] NO 
 - `mcp:tools` [ ] YES [ ] NO
 - Other channels: 
 
@@ -215,7 +213,6 @@ process: [what was logged]
 
 ### Files Exported:
 All important files have been copied to `extracted-files/` folder:
-
 - [ ] `main.js` (or main entry point)
 - [ ] `preload.js`
 - [ ] All MCP-related files
@@ -225,12 +222,12 @@ All important files have been copied to `extracted-files/` folder:
 ### File List:
 ```
 extracted-files/
-├── main.js
-├── preload.js
-├── mcp/
-│   ├── client.js
-│   └── ...
-└── ...
+ main.js
+ preload.js
+ mcp/
+ client.js
+ ...
+ ...
 ```
 
 ---
@@ -251,15 +248,9 @@ extracted-files/
 ## 11. Unknowns / Blockers
 
 ### Things We Couldn't Find:
-- 
-
-### Possible Reasons:
-- 
-
-### Alternative Approaches:
-- 
-
----
+- ### Possible Reasons:
+- ### Alternative Approaches:
+- ---
 
 ## Appendix: Full Code Exports
 

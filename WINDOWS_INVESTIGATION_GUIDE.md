@@ -1,18 +1,18 @@
 # Windows Investigation Guide for Qwen Desktop App Reverse Engineering
 
-**Purpose:** Extract how the official Qwen desktop app (Windows) implements MCP integration  
-**Goal:** Get exact architecture details so we can build the Linux version properly  
+**Purpose:** Extract how the official Qwen desktop app (Windows) implements MCP integration 
+**Goal:** Get exact architecture details so we can build the Linux version properly 
 **Tool:** Qwen Code CLI on Windows (has access to the official desktop app installation)
 
 ---
 
-## 📋 Instructions for the Person Running This on Windows
+## Instructions for the Person Running This on Windows
 
 Give this file to your Windows Qwen Code CLI and ask it to:
 
 > "Follow this investigation guide step by step. For each step, run the commands, inspect the files, and DOCUMENT EVERYTHING YOU FIND in a file called `QWEN_DESKTOP_FINDINGS.md`. Be thorough - we need precise details to build a Linux version."
 
-### ⚠️ IMPORTANT - DOCUMENT EVERYTHING
+### IMPORTANT - DOCUMENT EVERYTHING
 
 The Windows Qwen CLI MUST:
 
@@ -24,7 +24,6 @@ The Windows Qwen CLI MUST:
 6. **Export key files** - copy important source files to a folder called `extracted-files/` so we can review them
 
 **At the end, send back:**
-
 - The complete `QWEN_DESKTOP_FINDINGS.md` file (filled out from `FINDINGS_TEMPLATE.md`)
 - Any extracted code files from `extracted-files/` folder
 - Screenshots if DevTools is accessible (`screenshots/` folder)
@@ -46,7 +45,6 @@ Get-ChildItem -Path "$env:LOCALAPPDATA\Programs" -Recurse -Directory -Filter "*q
 ```
 
 **Report back:**
-
 - Where is the app installed?
 - What files/folders exist in the installation directory?
 
@@ -68,7 +66,6 @@ Get-ChildItem -Recurse -Depth 3 | Select-Object FullName | Format-Table -AutoSiz
 ```
 
 **Report back:**
-
 - Complete file tree structure
 - File sizes (especially look for `resources/app.asar` - this contains the app code)
 
@@ -94,7 +91,6 @@ Get-ChildItem -Path "extracted-app" -Recurse -File | Select-Object FullName | Fo
 ```
 
 **Report back:**
-
 - Extracted file structure
 - Is there a `package.json`? Show its contents
 - Is there a `main.js` or `main/` folder? Show structure
@@ -120,7 +116,6 @@ Select-String -Pattern "filesystem|browser|playwright" -Path "**/*.js" -SimpleMa
 ```
 
 **Report back:**
-
 - Which files mention MCP?
 - What MCP server configuration format does it use?
 - How does it load/connect to MCP servers?
@@ -140,7 +135,6 @@ Get-Content package.json
 ```
 
 **Report back:**
-
 - What is the `main` entry in `package.json`?
 - Show the first 100 lines of that file
 
@@ -159,7 +153,6 @@ Select-String -Pattern "@modelcontextprotocol/sdk" -Path "**/*.js" -List | Selec
 ```
 
 **Report back:**
-
 - Full contents of MCP-related files
 - How does it create the MCP client?
 - Which transport does it use (stdio, http, sse)?
@@ -185,7 +178,6 @@ Select-String -Pattern "api\.qwen|chat\.qwen|/api/|/v1/" -Path "**/*.js" | Selec
 ```
 
 **Report back:**
-
 - How does the app load chat.qwen.ai? (BrowserView, webview, or custom UI?)
 - Does it inject any scripts into the web view?
 - Does it intercept/modify API calls?
@@ -206,7 +198,6 @@ Select-String -Pattern "contextBridge|exposeInMainWorld" -Path "**/*.js" -List |
 ```
 
 **Report back:**
-
 - How does the main process communicate with the renderer?
 - What IPC channels exist?
 - How are MCP tools exposed to the chat interface?
@@ -226,7 +217,6 @@ Get-ChildItem -Path "$env:APPDATA\qwen-desktop" -ErrorAction SilentlyContinue
 ```
 
 **Report back:**
-
 - Where is the MCP configuration file stored?
 - What format is it? (JSON, YAML, etc.)
 - Show the contents of any MCP config files
@@ -244,7 +234,6 @@ Open the official Qwen desktop app and inspect its network requests:
 5. Look at the API requests
 
 **Report back:**
-
 - What API endpoints does it call?
 - Does it send MCP tool results in the requests?
 - What's the request/response format?
@@ -264,7 +253,6 @@ console.log(window.require);
 ```
 
 **Report back:**
-
 - What's exposed on `window` object related to MCP?
 - Can you access Electron APIs from the renderer?
 - Any `window.electronAPI` or similar?
@@ -281,7 +269,6 @@ Get-ChildItem -Recurse -Filter "*preload*" | Select-Object FullName
 ```
 
 **Report back:**
-
 - Show ALL preload script contents
 - What does it expose to the renderer?
 - How does it bridge MCP to the chat interface?
@@ -303,14 +290,13 @@ Select-String -Pattern "openai|completion|chat\.completions|gpt|qwen" -Path "**/
 ```
 
 **Report back:**
-
 - Does it use the web interface directly or call APIs?
 - If it calls APIs, what's the base URL and format?
 - How does it format messages with MCP tool results?
 
 ---
 
-## 📊 Final Report Format
+## Final Report Format
 
 Please compile findings in this format:
 
@@ -318,19 +304,16 @@ Please compile findings in this format:
 # Qwen Desktop Windows App - Reverse Engineering Report
 
 ## 1. App Location
-
 - Installation path:
 - Version:
 - Size:
 
 ## 2. App Structure
-
 - Full file tree:
 - Main entry point:
 - Key files:
 
 ## 3. MCP Implementation
-
 - MCP SDK version:
 - Transport method: (stdio / http / sse)
 - Client architecture:
@@ -338,42 +321,37 @@ Please compile findings in this format:
 - Config format: (show JSON)
 
 ## 4. Chat Integration
-
 - Method: (BrowserView / Custom UI / API calls)
 - URL used: (confirm chat.qwen.ai)
 - How MCP tools are sent to the API:
 - Request/response format:
 
 ## 5. IPC Architecture
-
 - How main talks to renderer:
 - What's exposed on window object:
 - Preload script functionality:
 
 ## 6. Key Code Snippets
-
 - MCP client creation: (show code)
 - Tool call loop: (show code)
 - API request format: (show code)
 
 ## 7. Critical Findings
-
 - How does the official app actually work?
 - What approach should the Linux version use?
 
 ## 8. File Exports
-
 - Export these files for full analysis:
-  - package.json
-  - main process entry file
-  - ALL MCP-related files
-  - preload script
-  - IPC handlers
+- package.json
+- main process entry file
+- ALL MCP-related files
+- preload script
+- IPC handlers
 ```
 
 ---
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### If app.asar can't be extracted
 
@@ -386,26 +364,23 @@ npx asar list "path\to\app.asar"
 ```
 
 ### If DevTools doesn't open in official app
-
 - The app may have disabled it. Try:
-  - `F12`
-  - `Ctrl+Shift+I`
-  - Look for a developer menu in the app settings
-  - Check if there's a `--dev` or `--inspect` flag:
-    ```powershell
-    & "path\to\qwen.exe" --help
-    ```
+- `F12`
+- `Ctrl+Shift+I`
+- Look for a developer menu in the app settings
+- Check if there's a `--dev` or `--inspect` flag:
+ ```powershell
+ & "path\to\qwen.exe" --help
+ ```
 
 ### If MCP code is minified/obfuscated
-
 - Still extract and search - minified code still has strings
 - Look for `mcp`, `tool`, `server` in variable names
 - The `@modelcontextprotocol/sdk` package won't be minified
 
 ---
 
-## ⚠️ Important Notes
-
+## Important Notes
 - **DO NOT** share API keys, tokens, or personal credentials
 - **ONLY** extract structural/architectural information
 - This is for **interoperability research** - building a compatible Linux client
