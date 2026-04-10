@@ -6,6 +6,7 @@ import windowStateKeeper from "electron-window-state";
 import { McpProxy } from "../mcp/proxy.js";
 import { adaptConfig } from "./mcp-config.js";
 import { getPlatformName, ensureRuntimesExecutable } from "./runtime.js";
+import { setupAutoUpdater } from "./updater.js";
 import type { McpConfig, DialogOptions } from "../shared/types.js";
 
 // === Constants ===
@@ -545,6 +546,11 @@ app.whenReady().then(async () => {
 
     // Setup protocol handler
     setupProtocolHandler();
+
+    // Setup auto-updater (only in production)
+    if (app.isPackaged) {
+      setupAutoUpdater();
+    }
 
     // Create main window
     createWindow();

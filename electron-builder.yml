@@ -30,3 +30,9 @@ extraResources:
 
 directories:
   output: "dist"
+
+publish:
+  provider: github
+  owner: youssefvdel
+  repo: qwen-desktop-linux
+  releaseType: release

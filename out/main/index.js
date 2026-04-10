@@ -10,6 +10,7 @@ const electron_settings_1 = __importDefault(require("electron-settings"));
 const proxy_js_1 = require("../mcp/proxy.js");
 const mcp_config_js_1 = require("./mcp-config.js");
 const runtime_js_1 = require("./runtime.js");
+const updater_js_1 = require("./updater.js");
 // === Constants ===
 const APP_VERSION = electron_1.app.getVersion();
 const USER_AGENT_SUFFIX = `AliDesktop(QWENCHAT/${APP_VERSION})`;
@@ -458,6 +459,10 @@ electron_1.app.whenReady().then(async () => {
         registerIpcHandlers();
         // Setup protocol handler
         setupProtocolHandler();
+        // Setup auto-updater (only in production)
+        if (electron_1.app.isPackaged) {
+            (0, updater_js_1.setupAutoUpdater)();
+        }
         // Create main window
         createWindow();
         console.log("[App] ✅ Window created successfully");
