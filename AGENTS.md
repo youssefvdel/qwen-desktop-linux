@@ -21,6 +21,7 @@ Multiple AI agents can work on this codebase in parallel. To avoid conflicts:
 | Agent Name | Status | Working On | Files Locked | Started |
 |------------|--------|-----------|--------------|---------|
 | **main** | `idle` | — | — | — |
+| **claw** | `idle` | — | — | 2026-04-10 |
 
 ### How to Register
 
@@ -31,6 +32,33 @@ When you start working, add yourself to the table above:
 ```
 
 When you finish, update your status to `idle` and clear your locked files.
+
+---
+
+## 📦 Task Queue
+
+Add tasks here. Agents pick them top-to-bottom.
+
+| # | Task | Priority | Assigned To | Status |
+|---|------|----------|-------------|--------|
+| 1 | fix process not end after close the window | high | main | `done` |
+| 2 | add icon tray in the | medium | claw | `done` |
+| 3 | bump version to 1.0.1 + rebuild + install | high | main | `done` |
+| 4 | fix local MCP (fetch, filesystem, sequential-thinking) — wrong bundled runtime paths | high | main | `done` |
+| 5 | fix EPERM chmod error on /opt bundled runtimes | medium | main | `done` |
+| 6 | auto-create default MCP servers (Fetch, Filesystem, Sequential-Thinking) on first launch | high | main | `done` |
+| — | *(add more tasks below)* | — | — | — |
+
+### How to Add a Task
+Add a row to the table above. Use priority: `high`, `medium`, or `low`.
+Leave "Assigned To" blank — agents claim tasks themselves.
+
+### How Agents Claim Tasks
+1. Read the queue — find the highest-priority `unassigned` task.
+2. Update the row: set "Assigned To" to your name and "Status" to `in progress`.
+3. Register in the **Agent Registry** with your locked files.
+4. Do the work.
+5. Update "Status" to `done` when finished, then set to `idle` in the registry.
 
 ---
 
