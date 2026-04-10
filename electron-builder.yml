@@ -1,0 +1,32 @@
+appId: com.qwen.desktop.linux
+productName: "Qwen Desktop"
+copyright: Copyright © 2026 Qwen Community
+
+linux:
+  target:
+    - AppImage
+  category: Utility
+  icon: "resources/icon.png"
+  artifactName: "${productName}-${version}-${arch}.${ext}"
+
+files:
+  - "out/**/*"
+  - "package.json"
+  - "node_modules/**/*"
+  - "!node_modules/@electron-toolkit/**/*"
+  - "!node_modules/@types/**/*"
+  - "!node_modules/electron/**/*"
+  - "!src/**/*"
+  - "!*.md"
+  - "!tsconfig.json"
+  - "!forge.config.ts"
+  - "!scripts/**/*"
+
+extraResources:
+  - from: "resources/bun"
+    to: "resources/bun"
+  - from: "resources/uv"
+    to: "resources/uv"
+
+directories:
+  output: "dist"

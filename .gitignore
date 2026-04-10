@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Packaged apps
+*.AppImage
+*.deb
+*.rpm
+*.zip
+*.tar.gz
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.local
+
+# Config (user-specific)
+*.config.js
+
+# Temp files
+tmp/
+temp/
+
+# Extracted runtimes (downloaded by postinstall)
+resources/bun/linux-*/
+resources/uv/linux-*/
