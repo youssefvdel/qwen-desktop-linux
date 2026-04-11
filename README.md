@@ -1,6 +1,29 @@
-# Qwen Desktop for Linux
+# Qwen Desktop for Linux 🐧 | Official Qwen AI App & MCP Client
 
-**The official Qwen AI desktop app, now for Linux with full MCP support!**
+![GitHub Stars](https://img.shields.io/github/stars/youssefvdel/qwen-desktop-linux?style=social)
+![GitHub Forks](https://img.shields.io/github/forks/youssefvdel/qwen-desktop-linux?style=social)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Platform](https://img.shields.io/badge/platform-Linux-orange.svg)
+
+**The open-source Qwen AI desktop client for Ubuntu, Fedora, and Arch.**
+Full Model Context Protocol (MCP) support, native system tray, and local runtime integration.
+
+---
+
+## 📦 Quick Downloads
+- **[AppImage](https://github.com/youssefvdel/qwen-desktop-linux/releases)** (Works on all distros)
+- **[.deb Package](https://github.com/youssefvdel/qwen-desktop-linux/releases)** (Debian/Ubuntu)
+- **[.rpm Package](https://github.com/youssefvdel/qwen-desktop-linux/releases)** (Fedora/RHEL)
+
+---
+
+## 🌟 Why This App?
+
+Unlike web-only access, **Qwen Desktop for Linux** brings the AI to your OS:
+- 🚀 **Native Performance:** Built with Electron + Bun for blazing speed.
+- 🔌 **MCP Integration:** Connects to local files, databases, and browser automation.
+- 🛡️ **Privacy First:** Sandboxed webview, no data leaks, context isolation.
+- 🐧 **Linux-First:** Optimized for System Tray, Themes, and Distros (Ubuntu, Fedora, Arch).
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)

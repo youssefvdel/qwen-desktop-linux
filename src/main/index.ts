@@ -321,25 +321,49 @@ async function getAvailableSkills(): Promise<string[]> {
 }
 
 async function injectSkill(skillName: string) {
+async function injectSkill(skillName: string) {
   if (!mainWindow) return;
   
   const skillPath = path.join(SKILLS_DIR, skillName);
   try {
     const content = await fs.promises.readFile(skillPath, 'utf-8');
-    // Inject into the textarea
+    // Safely encode the content to prevent syntax errors in the injected script
+    const safeContent = JSON.stringify(content);
+    
     const jsCode = `
-      const textarea = document.querySelector('textarea[data-id="chat-input"]') || document.querySelector('textarea');
-      if (textarea) {
-        textarea.value = \`${content.replace(/`/g, '\\`').replace(/\n/g, '\\n')}\` + textarea.value;
-        textarea.dispatchEvent(new Event('input', { bubbles: true }));
-        textarea.focus();
-      }
+      (function() {
+        const text = ${safeContent};
+        const selectors = [
+          'textarea[data-id="chat-input"]',
+          'textarea',
+          'div[role="textbox"]',
+          'div[contenteditable="true"]'
+        ];
+        let el = null;
+        for (const sel of selectors) {
+          el = document.querySelector(sel);
+          if (el) break;
+        }
+        
+        if (el) {
+          el.focus();
+          if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') {
+            el.value = text + (el.value || '');
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+          } else {
+            el.textContent = text + (el.textContent || '');
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+        }
+      })();
     `;
     await mainWindow.webContents.executeJavaScript(jsCode);
     console.log(`[Skills] Injected: ${skillName}`);
   } catch (error) {
+    const errMsg = error instanceof Error ? error.message : String(error);
     console.error(`[Skills] Failed to inject ${skillName}:`, error);
-    dialog.showErrorBox('Skill Error', `Failed to load skill: ${skillName}`);
+    dialog.showErrorBox('Skill Error', `Failed to load skill: ${skillName}\n\nError: ${errMsg}\nDir: ${SKILLS_DIR}`);
   }
 }
 
@@ -392,7 +416,8 @@ function createWindow() {
     minWidth: 800,
     minHeight: 600,
     title: "Qwen",
-    show: false, // Don't show until ready
+    show: false, // Don.t show until ready
+    autoHideMenuBar: false,
     webPreferences: {
       preload: preloadPath,
       sandbox: false,
@@ -426,6 +451,8 @@ function createWindow() {
 
   // Load chat.qwen.ai
   console.log("[Window] Loading:", WEBVIEW_URL);
+  mainWindow.setMenuBarVisibility(true);
+  mainWindow.setAutoHideMenuBar(false);
   mainWindow.loadURL(WEBVIEW_URL);
 
   // === TEMPORARY: Network Interception Logger ===
@@ -803,9 +830,60 @@ function setupMenu() {
       submenu: [
         { 
           label: 'Check for Updates', 
-          click: () => {
+          click: async () => {
             console.log("[Updater] Manual check triggered");
-            autoUpdater.checkForUpdatesAndNotify().catch(() => {});
+            if (!mainWindow) return;
+
+            try {
+              // Show loading dialog
+              const loadingDialog = dialog.showMessageBoxSync(mainWindow, {
+                type: 'info',
+                title: 'Checking for Updates',
+                message: 'Checking for updates...',
+                buttons: [],
+                noLink: true
+              });
+
+              // Check for updates
+              const updateInfo = await autoUpdater.checkForUpdates();
+              
+              if (updateInfo && updateInfo.updateInfo) {
+                const currentVersion = app.getVersion();
+                const latestVersion = updateInfo.updateInfo.version;
+                
+                if (latestVersion !== currentVersion) {
+                  const { response } = dialog.showMessageBoxSync(mainWindow, {
+                    type: 'info',
+                    title: 'Update Available',
+                    message: `A new version (${latestVersion}) is available! Current version: ${currentVersion}.`,
+                    buttons: ['Download', 'Later'],
+                    defaultId: 0
+                  });
+                  if (response === 0) {
+                    autoUpdater.downloadUpdate();
+                  }
+                } else {
+                  dialog.showMessageBoxSync(mainWindow, {
+                    type: 'info',
+                    title: 'Up to Date',
+                    message: `You are using the latest version (${currentVersion}).`
+                  });
+                }
+              } else {
+                dialog.showMessageBoxSync(mainWindow, {
+                  type: 'info',
+                  title: 'Up to Date',
+                  message: 'You are using the latest version.'
+                });
+              }
+            } catch (error) {
+              console.error("[Updater] Check failed:", error);
+              dialog.showMessageBoxSync(mainWindow, {
+                type: 'error',
+                title: 'Update Check Failed',
+                message: `Could not check for updates.\n\nError: ${error instanceof Error ? error.message : error}`
+              });
+            }
           }
         },
         { type: 'separator' },
