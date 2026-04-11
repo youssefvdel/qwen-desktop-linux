@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, session, dialog, shell, Tray, Menu, nativeImage } from "electron";
+import { app, BrowserWindow, ipcMain, session, dialog, shell, Tray, Menu, MenuItem, MenuItemConstructorOptions, nativeImage } from "electron";
 import path from "path";
 import fs from "fs";
 import settings from "electron-settings";
@@ -7,7 +7,12 @@ import { McpProxy } from "../mcp/proxy.js";
 import { adaptConfig } from "./mcp-config.js";
 import { getPlatformName, ensureRuntimesExecutable, getBunPath } from "./runtime.js";
 import { setupAutoUpdater } from "./updater.js";
+import { autoUpdater } from "electron-updater";
 import type { McpConfig, DialogOptions } from "../shared/types.js";
+
+// === Constants ===
+
+const SKILLS_DIR = path.join(app.getPath("userData"), "skills");
 
 // === Constants ===
 const APP_VERSION = app.getVersion();
@@ -291,6 +296,56 @@ function getDefaultMcpConfig(): McpConfig {
       transportType: "stdio",
     },
   };
+}
+
+
+// === Skills Management ===
+function ensureSkillsDir() {
+  if (!fs.existsSync(SKILLS_DIR)) {
+    fs.mkdirSync(SKILLS_DIR, { recursive: true });
+    // Create a sample skill
+    const sampleSkill = "# Python Expert\n\nAct as a senior Python developer. Focus on PEP8, efficiency, and best practices.";
+    fs.writeFileSync(path.join(SKILLS_DIR, "python-expert.md"), sampleSkill);
+  }
+}
+
+async function getAvailableSkills(): Promise<string[]> {
+  ensureSkillsDir();
+  try {
+    const files = await fs.promises.readdir(SKILLS_DIR);
+    return files.filter(f => f.endsWith('.md') || f.endsWith('.txt'));
+  } catch (error) {
+    console.error("[Skills] Error reading skills dir:", error);
+    return [];
+  }
+}
+
+async function injectSkill(skillName: string) {
+  if (!mainWindow) return;
+  
+  const skillPath = path.join(SKILLS_DIR, skillName);
+  try {
+    const content = await fs.promises.readFile(skillPath, 'utf-8');
+    // Inject into the textarea
+    const jsCode = `
+      const textarea = document.querySelector('textarea[data-id="chat-input"]') || document.querySelector('textarea');
+      if (textarea) {
+        textarea.value = \`${content.replace(/`/g, '\\`').replace(/\n/g, '\\n')}\` + textarea.value;
+        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+        textarea.focus();
+      }
+    `;
+    await mainWindow.webContents.executeJavaScript(jsCode);
+    console.log(`[Skills] Injected: ${skillName}`);
+  } catch (error) {
+    console.error(`[Skills] Failed to inject ${skillName}:`, error);
+    dialog.showErrorBox('Skill Error', `Failed to load skill: ${skillName}`);
+  }
+}
+
+function openSkillsFolder() {
+  ensureSkillsDir();
+  shell.openPath(SKILLS_DIR);
 }
 
 /**
@@ -739,7 +794,93 @@ app.commandLine.appendSwitch("v", "1");
 app.commandLine.appendSwitch("remote-debugging-port", "9222");
 app.commandLine.appendSwitch("remote-allow-origins", "*");
 
+
+// === Application Menu ===
+function setupMenu() {
+  const template: MenuItemConstructorOptions[] = [
+    {
+      label: 'Qwen',
+      submenu: [
+        { 
+          label: 'Check for Updates', 
+          click: () => {
+            console.log("[Updater] Manual check triggered");
+            autoUpdater.checkForUpdatesAndNotify().catch(() => {});
+          }
+        },
+        { type: 'separator' },
+        { role: 'quit' }
+      ]
+    },
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        { role: 'delete' },
+        { role: 'selectAll' }
+      ]
+    },
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload' },
+        { role: 'forceReload' },
+        { role: 'toggleDevTools' },
+        { type: 'separator' },
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' }
+      ]
+    },
+    {
+      label: 'Skills',
+      id: 'skills-menu',
+      submenu: [
+        { label: 'Open Skills Folder', click: openSkillsFolder },
+        { type: 'separator' }
+        // Dynamic skills will be added here
+      ]
+    }
+  ];
+
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
+  
+  // Update Skills submenu dynamically
+  updateSkillsMenu();
+}
+
+async function updateSkillsMenu() {
+  const menu = Menu.getApplicationMenu();
+  if (!menu) return;
+
+  const skillsItem = menu.getMenuItemById('skills-menu');
+  if (!skillsItem || !skillsItem.submenu) return;
+
+  // Clear existing dynamic items (keep first two: Open Folder and Separator)
+  while (skillsItem.submenu.items.length > 2) {
+    skillsItem.submenu.items.pop();
+  }
+
+  const skills = await getAvailableSkills();
+  skills.forEach(skill => {
+    const item = new MenuItem({
+      label: skill.replace('.md', '').replace('.txt', ''),
+      click: () => injectSkill(skill)
+    });
+    skillsItem.submenu?.append(item);
+  });
+}
+
 app.whenReady().then(async () => {
+  setupMenu();
   console.log("[App] Starting Qwen Desktop for Linux");
   console.log("[App] Platform:", getPlatformName());
   console.log("[App] Version:", APP_VERSION);
