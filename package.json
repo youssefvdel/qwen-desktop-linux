@@ -1,7 +1,7 @@
 {
   "name": "qwen-desktop-linux",
   "version": "1.1.1",
-  "description": "Qwen Desktop for Linux with full MCP support",
+  "description": "Open-source Qwen AI (Tongyi Qianwen) desktop client for Linux. Full MCP support, system tray, bundled runtimes. Alternative to official Windows/Mac-only Qwen Desktop app.",
   "main": "./out/main/index.js",
   "author": "youssefvdel <youssefvdel@gmail.com>",
   "homepage": "https://chat.qwen.ai/",
@@ -16,7 +16,7 @@
     "make:deb": "npm run copy-assets && tsc && electron-forge make --targets=@electron-forge/maker-deb",
     "make:rpm": "npm run copy-assets && tsc && electron-forge make --targets=@electron-forge/maker-rpm",
     "make:all": "npm run copy-assets && tsc && electron-forge make",
-    "build": "electron-builder --linux AppImage",
+    "build": "tsc && electron-builder --linux AppImage",
     "build:deb": "electron-builder --linux deb",
     "build:rpm": "electron-builder --linux rpm",
     "build:all": "electron-builder --linux",
