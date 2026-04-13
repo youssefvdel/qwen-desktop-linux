@@ -1,21 +1,20 @@
-# Qwen Desktop for Linux 🐧 — Free Open-Source Qwen AI Desktop Client
+# Qwen Desktop for Linux
 
 [![Version](https://img.shields.io/github/v/release/youssefvdel/qwen-desktop-linux?label=version&color=blue)](https://github.com/youssefvdel/qwen-desktop-linux/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Linux-orange.svg)](https://github.com/youssefvdel/qwen-desktop-linux/releases)
 [![Stars](https://img.shields.io/github/stars/youssefvdel/qwen-desktop-linux?style=social)](https://github.com/youssefvdel/qwen-desktop-linux/stargazers)
 
-**The first and only open-source Qwen AI (Tongyi Qianwen) desktop application for Linux.** Run Alibaba's Qwen3 models natively on Ubuntu, Fedora, Arch, and all Linux distributions with full MCP (Model Context Protocol) support.
+Open-source Qwen AI (Tongyi Qianwen) desktop client for Linux. Run Alibaba's Qwen models natively on Ubuntu, Fedora, Arch, and all Linux distributions with full MCP (Model Context Protocol) support.
 
-> 💡 **What is Qwen?** Qwen (通义千问 / Tongyi Qianwen) is Alibaba Cloud's family of large language models, including Qwen-Max, Qwen-Plus, Qwen3-6Plus, and Qwen3-235B-A22B. The official Qwen Desktop app only supports Windows and macOS — **this project brings the same desktop experience to Linux.**
+The official Qwen Desktop app only supports Windows and macOS. This project brings the same desktop experience to Linux.
 
 ---
 
-## 🚀 Quick Install — No Building Required
+## Quick Install
 
-### Option 1: AppImage (Recommended — works on every distro)
+### Option 1: AppImage (recommended — works on every distro)
 ```bash
-# Download the latest release
 wget https://github.com/youssefvdel/qwen-desktop-linux/releases/latest/download/Qwen-1.1.2-x86_64.AppImage
 chmod +x Qwen-1.1.2-x86_64.AppImage
 ./Qwen-1.1.2-x86_64.AppImage
@@ -34,92 +33,89 @@ sudo dnf install https://github.com/youssefvdel/qwen-desktop-linux/releases/late
 qwen-desktop
 ```
 
-**[📦 All Downloads →](https://github.com/youssefvdel/qwen-desktop-linux/releases)**
+[All Downloads](https://github.com/youssefvdel/qwen-desktop-linux/releases)
 
 ---
 
-## ✨ Features
+## Features
 
 | Feature | Description |
 |---------|-------------|
-| 🤖 **Full Qwen AI Access** | Native desktop wrapper for chat.qwen.ai — supports Qwen3-6Plus, Qwen-Max, Qwen-Plus |
-| 🔌 **MCP Integration** | Connect AI to your files, browser, databases, and custom tools via Model Context Protocol |
-| 💻 **System Tray** | Minimize to tray, right-click menu, stays running in background |
-| 🌍 **12 Languages** | 中文, English, 日本語, 한국어, Русский, Deutsch, Français, Español, Italiano, Português, العربية |
-| 🎨 **Theme Support** | Light/dark mode with automatic system theme detection |
-| ️ **Privacy First** | Sandboxed webview, context isolation, no data leaks, Electron Fuses security |
-| 📦 **3 Package Formats** | AppImage (universal), .deb (Debian/Ubuntu), .rpm (Fedora/RHEL) |
-| ⚡ **Bundled Runtimes** | Includes Bun + UV — MCP servers work with zero system installs |
-| 🔗 **Deep Linking** | `qwen://` protocol support for authentication and sharing |
-| 🧩 **Skills System** | Create reusable system prompts as `.md` files — inject into chat with one click |
+| Full Qwen AI access | Native desktop wrapper for chat.qwen.ai — supports Qwen3-6Plus, Qwen-Max, Qwen-Plus |
+| MCP integration | Connect AI to files, browser, databases, and custom tools via Model Context Protocol |
+| System tray | Minimize to tray, right-click menu, runs in background |
+| 12 languages | zh-CN, en-US, zh-TW, ja-JP, ko-KR, ru-RU, de-DE, fr-FR, es-ES, it-IT, pt-PT, ar-BH |
+| Theme support | Light/dark mode with automatic system theme detection |
+| Privacy first | Sandboxed webview, context isolation, Electron Fuses, no telemetry |
+| 3 package formats | AppImage (universal), .deb (Debian/Ubuntu), .rpm (Fedora/RHEL) |
+| Bundled runtimes | Includes Bun + UV — MCP servers work with zero system installs |
+| Deep linking | `qwen://` protocol support for authentication and sharing |
+| Skills system | Reusable system prompts as `.md` files — inject into chat with one click |
 
 ---
 
-## 📸 Screenshots
+## Screenshots
 
-*(Add your screenshots here — Google indexes images and they drive clicks!)*
+*(Add screenshots here)*
 
-![Qwen Desktop Linux Main Window](resources/screenshots/main-window.png)
-*Main chat interface with Qwen3-6Plus*
+![Main Window](resources/screenshots/main-window.png)
+*Main chat interface*
 
-![Qwen Desktop Linux MCP](resources/screenshots/mcp-config.png)
+![MCP Configuration](resources/screenshots/mcp-config.png)
 *MCP configuration panel*
 
-![Qwen Desktop Linux Skills](resources/screenshots/skills-menu.png)
+![Skills Menu](resources/screenshots/skills-menu.png)
 *Skills system menu*
 
 ---
 
-## ❓ FAQ
+## FAQ
 
 ### What is Qwen AI?
-Qwen (通义千问, Tongyi Qianwen) is a family of large language models developed by Alibaba Cloud's Tongyi Lab. It includes models like Qwen-Max (most capable), Qwen-Plus (balanced), Qwen3-6Plus, and Qwen3-235B-A22B. It's China's answer to GPT-4 and Claude.
+Qwen (通义千问, Tongyi Qianwen) is a family of large language models developed by Alibaba Cloud's Tongyi Lab. It includes Qwen-Max, Qwen-Plus, Qwen3-6Plus, and Qwen3-235B-A22B.
 
 ### Is this the official Qwen Desktop app?
-No. The official Qwen Desktop app from Alibaba only supports **Windows and macOS**. This is a **community-built, open-source** desktop wrapper that brings the same experience to Linux by reverse-engineering the official app's desktop protocol.
+No. The official app only supports Windows and macOS. This is a community-built, open-source desktop wrapper for Linux, reverse-engineered from the official app's protocol.
 
-### Is Qwen Desktop for Linux free?
-Yes, 100% free and open-source under the MIT license. No account needed beyond your Qwen account on chat.qwen.ai.
+### Is it free?
+Yes. MIT license. No account needed beyond your Qwen account on chat.qwen.ai.
 
-### What Linux distributions are supported?
-All of them. The **AppImage** works on every distro (Ubuntu, Fedora, Arch, Debian, openSUSE, etc.). We also provide native **.deb** packages for Debian/Ubuntu and **.rpm** packages for Fedora/RHEL.
+### What distributions are supported?
+All of them. AppImage works everywhere. We also ship native .deb and .rpm packages.
 
-### What is MCP (Model Context Protocol)?
-MCP lets Qwen AI interact with your local tools and data. With MCP enabled, Qwen can read/write files on your computer, automate your browser, query databases, and use any CLI tool — all from the chat interface.
+### What is MCP?
+Model Context Protocol lets Qwen interact with local tools and data. Enabled MCP servers can read/write files, automate your browser, query databases, and run CLI tools — all from chat.
 
 ### Does it work on Wayland?
-Yes, but you may need to add `--enable-features=UseOzonePlatform --ozone-platform=wayland` as a launch flag on some Wayland compositors. On X11, it works out of the box.
+Yes, but some Wayland compositors need `--enable-features=UseOzonePlatform --ozone-platform=wayland` as a launch flag. X11 works out of the box.
 
-### How does this compare to using chat.qwen.ai in a browser?
+### Browser vs Desktop — why use this?
 | Browser | Qwen Desktop for Linux |
 |---------|----------------------|
-| No system tray | ✅ Minimize to tray |
-| No MCP support | ✅ Full MCP (files, browser, databases) |
-| No file picker integration | ✅ Native file picker |
-| No deep linking | ✅ qwen:// protocol |
-| No offline skills | ✅ Skills system with .md files |
-| Browser tabs clutter | ✅ Dedicated app window |
-
-### Can I build from source?
-Yes! See the [Development](#-development) section below.
+| No system tray | System tray integration |
+| No MCP support | Full MCP (files, browser, databases) |
+| No file picker | Native file picker |
+| No deep linking | qwen:// protocol |
+| No persistent skills | Skills system with .md files |
+| Tab clutter | Dedicated app window |
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
-Built with **Electron 34** + **TypeScript**, mirroring the official Qwen Desktop app's architecture:
+Built with Electron 34 + TypeScript, mirroring the official Qwen Desktop app:
 
 ```
 ┌─────────────────────────────────────────────┐
 │           Qwen Desktop (Electron)            │
 │                                              │
 │  ┌─────────────┐    ┌──────────────────┐    │
-│  │ Main Process│    │   MCP Proxy      │    │
-│  │             │◄──►│  (McpProxy)      │    │
+│  │ Main Process│◄──►│   MCP Proxy      │    │
+│  │             │    │  (McpProxy)      │    │
 │  │  - IPC      │    │  - stdio client  │    │
 │  │  - Tray     │    │  - SSE client    │    │
 │  │  - Menu     │    │  - HTTP stream   │    │
-│  └──────┬──────┘    └────────┬─────────┘    │
+│  └──────┬──────┘    └────────┬─────────    │
 │         │                    │               │
 │  ┌──────▼──────┐    ┌───────▼──────────┐    │
 │  │  Preload    │    │  Bundled Runtimes│    │
@@ -135,7 +131,7 @@ Built with **Electron 34** + **TypeScript**, mirroring the official Qwen Desktop
 └─────────────────────────────────────────────┘
 ```
 
-### Module Structure (after 2026-04 refactor)
+### Module Structure
 
 | Module | Purpose |
 |--------|---------|
@@ -152,7 +148,7 @@ Built with **Electron 34** + **TypeScript**, mirroring the official Qwen Desktop
 
 ---
 
-## 🛠️ Development
+## Development
 
 ### Prerequisites
 - Node.js 22+
@@ -163,16 +159,16 @@ Built with **Electron 34** + **TypeScript**, mirroring the official Qwen Desktop
 ```bash
 git clone https://github.com/youssefvdel/qwen-desktop-linux.git
 cd qwen-desktop-linux
-npm install    # Downloads bun + uv runtimes automatically
-npm start      # Development mode with hot reload
+npm install
+npm start
 ```
 
 ### Build Packages
 ```bash
-# AppImage (universal portable app)
+# AppImage
 npm run build
 
-# All formats (AppImage + deb + rpm)
+# All formats
 npm run make
 
 # Individual formats
@@ -185,44 +181,44 @@ npm run make:rpm    # Fedora/RHEL
 qwen-desktop-linux/
 ├── src/
 │   ├── main/           # Electron main process
-│   │   ├── index.ts    # App bootstrap
+│   │   ├── index.ts
 │   │   ├── window-manager.ts
 │   │   ├── ipc-handlers.ts
 │   │   ├── skills-manager.ts
 │   │   ├── app-lifecycle.ts
 │   │   ├── runtime.ts
 │   │   └── mcp-config.ts
-│   ├── mcp/            # MCP implementation
+│   ├── mcp/
 │   │   ├── proxy.ts
 │   │   └── server-client.ts
-│   ├── preload/        # Preload script (bridge)
+│   ├── preload/
 │   │   └── index.ts
-│   ├── renderer/       # Minimal webview shell
-│   └── shared/         # TypeScript types
-├── resources/          # Bundled runtimes + icon
+│   ├── renderer/
+│   └── shared/
+├── resources/
 │   ├── bun/linux-x64/
 │   └── uv/linux-x64/
-├── dist/               # Build output
+├── dist/
 └── package.json
 ```
 
 ---
 
-## 🔧 MCP Configuration
+## MCP Configuration
 
-### What Can MCP Do?
+### Available MCP Servers
 
-| MCP Server | Capability |
+| Server | Capability |
 |-----------|------------|
-| **Filesystem** | Read, write, search, list files on your computer |
-| **Fetch** | Access web APIs and URLs directly from chat |
-| **Sequential-Thinking** | Multi-step reasoning for complex problems |
-| **Desktop-Commander** | Run shell commands, manage processes |
-| **Browser** | Automate web browsing, take screenshots (Playwright) |
-| **SQLite/PostgreSQL** | Query databases directly from chat |
+| Filesystem | Read, write, search, list files |
+| Fetch | Access web APIs and URLs from chat |
+| Sequential-Thinking | Multi-step reasoning |
+| Desktop-Commander | Run shell commands, manage processes |
+| Browser | Automate web browsing, screenshots (Playwright) |
+| SQLite/PostgreSQL | Query databases from chat |
 
-### Example MCP Config
-The app creates default MCP servers on first launch. Customize via the app's settings:
+### Example Config
+Default MCP servers are created on first launch. Customize via the app's settings:
 
 ```json
 {
@@ -244,15 +240,15 @@ The app creates default MCP servers on first launch. Customize via the app's set
 }
 ```
 
-**Note:** The app automatically replaces `npx`, `bun`, and `uvx` commands with bundled runtime paths — no system-wide installs needed.
+The app automatically replaces `npx`, `bun`, and `uvx` commands with bundled runtime paths.
 
 ---
 
-## 🧩 Skills System
+## Skills System
 
-Create reusable system prompts as `.md` files in `~/.config/qwen-desktop-linux/skills/`. Each skill is injected into the chat input with one click from the **Skills** menu.
+Create system prompts as `.md` files in `~/.config/qwen-desktop-linux/skills/`. Inject into chat via the Skills menu.
 
-### Example Skill
+### Example
 ```markdown
 # Python Expert
 
@@ -263,90 +259,75 @@ You are a senior Python developer. Focus on:
 - Modern Python 3.12+ features
 ```
 
-Click **Menu → Skills → Python Expert** to inject this prompt before chatting.
+Menu → Skills → Python Expert injects the prompt.
 
 ### Built-in Skills
-- `linux-power-user.md` — Linux terminal commands and system administration
-- `code-reviewer.md` — Code review with scoring and improvement suggestions
+- `linux-power-user.md` — Terminal commands and system administration
+- `code-reviewer.md` — Code review with scoring
 - `python-expert.md` — Python development guidance (sample)
 
 ---
 
-## 🌐 Internationalization
+## Internationalization
 
-Supported languages:
-- 🇨🇳 简体中文 (zh-CN)
-- 🇬🇧 English (en-US)
-- 🇹🇼 繁體中文 (zh-TW)
-- 🇯🇵 日本語 (ja-JP)
-- 🇰🇷 한국어 (ko-KR)
-- 🇷🇺 Русский (ru-RU)
-- 🇩 Deutsch (de-DE)
-- 🇫 Français (fr-FR)
-- 🇪 Español (es-ES)
-- 🇮 Italiano (it-IT)
-- 🇵 Português (pt-PT)
-- 🇧 العربية (ar-BH)
+zh-CN, en-US, zh-TW, ja-JP, ko-KR, ru-RU, de-DE, fr-FR, es-ES, it-IT, pt-PT, ar-BH
 
 ---
 
-## 🔒 Security
+## Security
 
 | Layer | Implementation |
 |-------|---------------|
-| **Context Isolation** | Renderer has no direct Node.js access |
-| **Sandbox** | WebView runs in isolated process |
-| **Electron Fuses** | Dangerous features disabled in production |
-| **IPC Only** | All communication through typed channels |
-| **MCP Validation** | Only configured servers can connect |
-| **No Telemetry** | Zero data collection or tracking |
+| Context Isolation | No direct Node.js access from renderer |
+| Sandbox | WebView runs in isolated process |
+| Electron Fuses | Dangerous features disabled in production |
+| IPC Only | All communication through typed channels |
+| MCP Validation | Only configured servers can connect |
+| No Telemetry | Zero data collection |
 
 ---
 
-## 📋 Known Issues
+## Known Issues
 
 | Issue | Status | Workaround |
 |-------|--------|-----------|
 | Auto-update not configured | Planned | Use package manager or download new release |
 | Wayland compositors | Partial | Add `--ozone-platform=wayland` flag |
-| AppImage needs FUSE | Distro-dependent | Install `libfuse2` (Debian) or `fuse` (Arch) |
+| AppImage needs FUSE | Distro-dependent | Install `libfuse2` or `fuse` |
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
-Contributions welcome! This is a **community project** to bring Qwen Desktop to Linux.
+Contributions welcome.
 
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
-3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
-4. **Push** to the branch (`git push origin feature/amazing-feature`)
-5. **Open** a Pull Request
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Commit your changes
+4. Push and open a Pull Request
 
-### What We Need
-- 🌐 Translations for additional languages
-- 🐛 Bug reports and fixes
-- 📖 Documentation improvements
-- 🎨 UI/UX enhancements
-- 🧪 Testing on different distros
-
----
-
-## 📜 License
-
-**MIT License** — free for personal and commercial use. See [LICENSE](LICENSE) for details.
+What we need:
+- Translations for additional languages
+- Bug reports and fixes
+- Documentation improvements
+- UI/UX enhancements
+- Testing on different distros
 
 ---
 
-## 🙏 Acknowledgments
+## License
 
-- Based on reverse engineering of the official **Qwen Desktop** app (Windows/macOS)
+MIT License. See [LICENSE](LICENSE).
+
+---
+
+## Acknowledgments
+
+- Based on reverse engineering of the official Qwen Desktop app (Windows/macOS)
 - Uses [`@modelcontextprotocol/sdk`](https://github.com/modelcontextprotocol/typescript-sdk) by Anthropic
 - Bundled runtimes: [Bun](https://bun.sh/) + [uv](https://github.com/astral-sh/uv)
 - Built with [Electron](https://www.electronjs.org/)
 
 ---
 
-**Made with ❤️ for the Linux community**
-
-**Keywords:** Qwen AI Linux, Qwen Desktop Linux, Tongyi Qianwen Linux, open source Qwen, free Qwen AI desktop, Alibaba Qwen Linux client, Qwen MCP Linux, Qwen3 Linux app, Qwen chat desktop Linux, Ubuntu Qwen AI, Fedora Qwen, Arch Linux Qwen, Electron Qwen app
+Keywords: Qwen AI Linux, Qwen Desktop Linux, Tongyi Qianwen Linux, open source Qwen, free Qwen AI desktop, Alibaba Qwen Linux client, Qwen MCP Linux, Qwen3 Linux app, Qwen chat desktop Linux, Ubuntu Qwen AI, Fedora Qwen, Arch Linux Qwen, Electron Qwen app
