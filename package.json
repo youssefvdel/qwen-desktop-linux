@@ -1,6 +1,6 @@
 {
   "name": "qwen-desktop-linux",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Open-source Qwen AI (Tongyi Qianwen) desktop client for Linux. Full MCP support, system tray, bundled runtimes. Alternative to official Windows/Mac-only Qwen Desktop app.",
   "main": "./out/main/index.js",
   "author": "youssefvdel <youssefvdel@gmail.com>",

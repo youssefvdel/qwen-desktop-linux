@@ -16,21 +16,21 @@
 ### Option 1: AppImage (Recommended — works on every distro)
 ```bash
 # Download the latest release
-wget https://github.com/youssefvdel/qwen-desktop-linux/releases/latest/download/Qwen-1.1.1-x86_64.AppImage
-chmod +x Qwen-1.1.1-x86_64.AppImage
-./Qwen-1.1.1-x86_64.AppImage
+wget https://github.com/youssefvdel/qwen-desktop-linux/releases/latest/download/Qwen-1.1.2-x86_64.AppImage
+chmod +x Qwen-1.1.2-x86_64.AppImage
+./Qwen-1.1.2-x86_64.AppImage
 ```
 
 ### Option 2: Debian/Ubuntu
 ```bash
-wget https://github.com/youssefvdel/qwen-desktop-linux/releases/latest/download/qwen-desktop_1.1.1_amd64.deb
-sudo apt install ./qwen-desktop_1.1.1_amd64.deb
+wget https://github.com/youssefvdel/qwen-desktop-linux/releases/latest/download/qwen-desktop_1.1.2_amd64.deb
+sudo apt install ./qwen-desktop_1.1.2_amd64.deb
 qwen-desktop
 ```
 
 ### Option 3: Fedora/RHEL
 ```bash
-sudo dnf install https://github.com/youssefvdel/qwen-desktop-linux/releases/latest/download/qwen-desktop-1.1.1.x86_64.rpm
+sudo dnf install https://github.com/youssefvdel/qwen-desktop-linux/releases/latest/download/qwen-desktop-1.1.2.x86_64.rpm
 qwen-desktop
 ```
 
