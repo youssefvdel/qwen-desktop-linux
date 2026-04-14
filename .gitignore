@@ -41,6 +41,27 @@ temp/
 
 # AI agent coordination (local use only)
 AGENTS.md
+QWEN.md
+workspace.termcanvas
+
+# Obsidian vault
+.obsidian/
+
+# Graphify output
+graphify-out/
+
+# Flatpak build files (not part of app)
+flatpak/
+
+# Test/debug scripts
+test-electron.js
+
+# Research and findings documents
+FINDINGS_TEMPLATE.md
+KNOWN_ISSUES.md
+QWEN_DESKTOP_FINDINGS.md
+RESEARCH_AND_PLAN.md
+WINDOWS_INVESTIGATION_GUIDE.md
 
 # Extracted runtimes (downloaded by postinstall)
 resources/bun/linux-*/
