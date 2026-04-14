@@ -14,6 +14,7 @@ The official Qwen Desktop app only supports Windows and macOS. This project brin
 ## Quick Install
 
 ### Option 1: AppImage (recommended — works on every distro)
+
 ```bash
 wget https://github.com/youssefvdel/qwen-desktop-linux/releases/latest/download/Qwen-1.1.2-x86_64.AppImage
 chmod +x Qwen-1.1.2-x86_64.AppImage
@@ -21,6 +22,7 @@ chmod +x Qwen-1.1.2-x86_64.AppImage
 ```
 
 ### Option 2: Debian/Ubuntu
+
 ```bash
 wget https://github.com/youssefvdel/qwen-desktop-linux/releases/latest/download/qwen-desktop_1.1.2_amd64.deb
 sudo apt install ./qwen-desktop_1.1.2_amd64.deb
@@ -28,6 +30,7 @@ qwen-desktop
 ```
 
 ### Option 3: Fedora/RHEL
+
 ```bash
 sudo dnf install https://github.com/youssefvdel/qwen-desktop-linux/releases/latest/download/qwen-desktop-1.1.2.x86_64.rpm
 qwen-desktop
@@ -39,65 +42,67 @@ qwen-desktop
 
 ## Features
 
-| Feature | Description |
-|---------|-------------|
-| Full Qwen AI access | Native desktop wrapper for chat.qwen.ai — supports Qwen3-6Plus, Qwen-Max, Qwen-Plus |
-| MCP integration | Connect AI to files, browser, databases, and custom tools via Model Context Protocol |
-| System tray | Minimize to tray, right-click menu, runs in background |
-| 12 languages | zh-CN, en-US, zh-TW, ja-JP, ko-KR, ru-RU, de-DE, fr-FR, es-ES, it-IT, pt-PT, ar-BH |
-| Theme support | Light/dark mode with automatic system theme detection |
-| Privacy first | Sandboxed webview, context isolation, Electron Fuses, no telemetry |
-| 3 package formats | AppImage (universal), .deb (Debian/Ubuntu), .rpm (Fedora/RHEL) |
-| Bundled runtimes | Includes Bun + UV — MCP servers work with zero system installs |
-| Deep linking | `qwen://` protocol support for authentication and sharing |
-| Skills system | Reusable system prompts as `.md` files — inject into chat with one click |
+| Feature             | Description                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------ |
+| Full Qwen AI access | Native desktop wrapper for chat.qwen.ai — supports Qwen3-6Plus, Qwen-Max, Qwen-Plus  |
+| MCP integration     | Connect AI to files, browser, databases, and custom tools via Model Context Protocol |
+| System tray         | Minimize to tray, right-click menu, runs in background                               |
+| 12 languages        | zh-CN, en-US, zh-TW, ja-JP, ko-KR, ru-RU, de-DE, fr-FR, es-ES, it-IT, pt-PT, ar-BH   |
+| Theme support       | Light/dark mode with automatic system theme detection                                |
+| Privacy first       | Sandboxed webview, context isolation, Electron Fuses, no telemetry                   |
+| 3 package formats   | AppImage (universal), .deb (Debian/Ubuntu), .rpm (Fedora/RHEL)                       |
+| Bundled runtimes    | Includes Bun + UV — MCP servers work with zero system installs                       |
+| Deep linking        | `qwen://` protocol support for authentication and sharing                            |
+| Skills system       | Reusable system prompts as `.md` files — inject into chat with one click             |
 
 ---
 
 ## Screenshots
 
-*(Add screenshots here)*
+![Main Window](resources/screenshots/skills_menu.png)
+_Main chat interface with Skills menu open_
 
-![Main Window](resources/screenshots/main-window.png)
-*Main chat interface*
-
-![MCP Configuration](resources/screenshots/mcp-config.png)
-*MCP configuration panel*
-
-![Skills Menu](resources/screenshots/skills-menu.png)
-*Skills system menu*
+![MCP Configuration](resources/screenshots/mcp_page.png)
+_MCP configuration panel_
 
 ---
 
 ## FAQ
 
 ### What is Qwen AI?
+
 Qwen (通义千问, Tongyi Qianwen) is a family of large language models developed by Alibaba Cloud's Tongyi Lab. It includes Qwen-Max, Qwen-Plus, Qwen3-6Plus, and Qwen3-235B-A22B.
 
 ### Is this the official Qwen Desktop app?
+
 No. The official app only supports Windows and macOS. This is a community-built, open-source desktop wrapper for Linux, reverse-engineered from the official app's protocol.
 
 ### Is it free?
+
 Yes. MIT license. No account needed beyond your Qwen account on chat.qwen.ai.
 
 ### What distributions are supported?
+
 All of them. AppImage works everywhere. We also ship native .deb and .rpm packages.
 
 ### What is MCP?
+
 Model Context Protocol lets Qwen interact with local tools and data. Enabled MCP servers can read/write files, automate your browser, query databases, and run CLI tools — all from chat.
 
 ### Does it work on Wayland?
+
 Yes, but some Wayland compositors need `--enable-features=UseOzonePlatform --ozone-platform=wayland` as a launch flag. X11 works out of the box.
 
 ### Browser vs Desktop — why use this?
-| Browser | Qwen Desktop for Linux |
-|---------|----------------------|
-| No system tray | System tray integration |
-| No MCP support | Full MCP (files, browser, databases) |
-| No file picker | Native file picker |
-| No deep linking | qwen:// protocol |
-| No persistent skills | Skills system with .md files |
-| Tab clutter | Dedicated app window |
+
+| Browser              | Qwen Desktop for Linux               |
+| -------------------- | ------------------------------------ |
+| No system tray       | System tray integration              |
+| No MCP support       | Full MCP (files, browser, databases) |
+| No file picker       | Native file picker                   |
+| No deep linking      | qwen:// protocol                     |
+| No persistent skills | Skills system with .md files         |
+| Tab clutter          | Dedicated app window                 |
 
 ---
 
@@ -107,55 +112,57 @@ Built with Electron 34 + TypeScript, mirroring the official Qwen Desktop app:
 
 ```
 ┌─────────────────────────────────────────────┐
-│           Qwen Desktop (Electron)            │
-│                                              │
+│           Qwen Desktop (Electron)           │
+│                                             │
 │  ┌─────────────┐    ┌──────────────────┐    │
 │  │ Main Process│◄──►│   MCP Proxy      │    │
 │  │             │    │  (McpProxy)      │    │
 │  │  - IPC      │    │  - stdio client  │    │
 │  │  - Tray     │    │  - SSE client    │    │
 │  │  - Menu     │    │  - HTTP stream   │    │
-│  └──────┬──────┘    └────────┬─────────    │
-│         │                    │               │
-│  ┌──────▼──────┐    ┌───────▼──────────┐    │
+│  └──────┬──────┘    └────────┬─────────     │
+│         │                    │              │
+│  ┌──────▼──────┐    ┌────────▼─────────┐    │
 │  │  Preload    │    │  Bundled Runtimes│    │
 │  │  (Bridge)   │    │  - bun           │    │
 │  │             │    │  - uv / uvx      │    │
 │  └──────┬──────┘    └──────────────────┘    │
-│         │                                    │
-│  ┌──────▼──────────────────────────────┐    │
-│  │         WebView                      │    │
-│  │   chat.qwen.ai (desktop detection)   │    │
-│  │   window.electronAPI exposed         │    │
-│  └──────────────────────────────────────┘    │
+│         │                                   │
+│  ┌──────▼───────────────────────────────┐   │
+│  │         WebView                      │   │
+│  │   chat.qwen.ai (desktop detection)   │   │
+│  │   window.electronAPI exposed         │   │
+│  └──────────────────────────────────────┘   │
 └─────────────────────────────────────────────┘
 ```
 
 ### Module Structure
 
-| Module | Purpose |
-|--------|---------|
-| `src/main/index.ts` | App bootstrap, MCP defaults, menu, update check |
-| `src/main/window-manager.ts` | BrowserWindow, system tray, GPU flags |
-| `src/main/ipc-handlers.ts` | 17 IPC handlers (MCP, theme, dialogs) |
-| `src/main/skills-manager.ts` | Skills system (inject prompts into chat) |
-| `src/main/app-lifecycle.ts` | Protocol handler, deep links, quit state |
-| `src/main/runtime.ts` | Bundled bun/uv path resolution |
-| `src/main/mcp-config.ts` | MCP config adaptation (npx→bun, uvx→uvx) |
-| `src/mcp/proxy.ts` | Multi-server MCP connection management |
-| `src/mcp/server-client.ts` | Single MCP server client (stdio/SSE/HTTP) |
-| `src/preload/index.ts` | contextBridge → window.electronAPI |
+| Module                       | Purpose                                         |
+| ---------------------------- | ----------------------------------------------- |
+| `src/main/index.ts`          | App bootstrap, MCP defaults, menu, update check |
+| `src/main/window-manager.ts` | BrowserWindow, system tray, GPU flags           |
+| `src/main/ipc-handlers.ts`   | 17 IPC handlers (MCP, theme, dialogs)           |
+| `src/main/skills-manager.ts` | Skills system (inject prompts into chat)        |
+| `src/main/app-lifecycle.ts`  | Protocol handler, deep links, quit state        |
+| `src/main/runtime.ts`        | Bundled bun/uv path resolution                  |
+| `src/main/mcp-config.ts`     | MCP config adaptation (npx→bun, uvx→uvx)        |
+| `src/mcp/proxy.ts`           | Multi-server MCP connection management          |
+| `src/mcp/server-client.ts`   | Single MCP server client (stdio/SSE/HTTP)       |
+| `src/preload/index.ts`       | contextBridge → window.electronAPI              |
 
 ---
 
 ## Development
 
 ### Prerequisites
+
 - Node.js 22+
 - npm
 - Linux (x64 or ARM64)
 
 ### Install & Run
+
 ```bash
 git clone https://github.com/youssefvdel/qwen-desktop-linux.git
 cd qwen-desktop-linux
@@ -164,6 +171,7 @@ npm start
 ```
 
 ### Build Packages
+
 ```bash
 # AppImage
 npm run build
@@ -177,6 +185,7 @@ npm run make:rpm    # Fedora/RHEL
 ```
 
 ### Project Structure
+
 ```
 qwen-desktop-linux/
 ├── src/
@@ -208,23 +217,29 @@ qwen-desktop-linux/
 
 ### Available MCP Servers
 
-| Server | Capability |
-|-----------|------------|
-| Filesystem | Read, write, search, list files |
-| Fetch | Access web APIs and URLs from chat |
-| Sequential-Thinking | Multi-step reasoning |
-| Desktop-Commander | Run shell commands, manage processes |
-| Browser | Automate web browsing, screenshots (Playwright) |
-| SQLite/PostgreSQL | Query databases from chat |
+| Server              | Capability                                      |
+| ------------------- | ----------------------------------------------- |
+| Filesystem          | Read, write, search, list files                 |
+| Fetch               | Access web APIs and URLs from chat              |
+| Sequential-Thinking | Multi-step reasoning                            |
+| Desktop-Commander   | Run shell commands, manage processes            |
+| Browser             | Automate web browsing, screenshots (Playwright) |
+| SQLite/PostgreSQL   | Query databases from chat                       |
 
 ### Example Config
+
 Default MCP servers are created on first launch. Customize via the app's settings:
 
 ```json
 {
   "Filesystem": {
     "command": "bun",
-    "args": ["x", "-y", "@modelcontextprotocol/server-filesystem", "/home/user/Documents"],
+    "args": [
+      "x",
+      "-y",
+      "@modelcontextprotocol/server-filesystem",
+      "/home/user/Documents"
+    ],
     "transportType": "stdio"
   },
   "Fetch": {
@@ -249,10 +264,12 @@ The app automatically replaces `npx`, `bun`, and `uvx` commands with bundled run
 Create system prompts as `.md` files in `~/.config/qwen-desktop-linux/skills/`. Inject into chat via the Skills menu.
 
 ### Example
+
 ```markdown
 # Python Expert
 
 You are a senior Python developer. Focus on:
+
 - PEP8 compliance and type hints
 - Performance optimization
 - Error handling and testing
@@ -262,6 +279,7 @@ You are a senior Python developer. Focus on:
 Menu → Skills → Python Expert injects the prompt.
 
 ### Built-in Skills
+
 - `linux-power-user.md` — Terminal commands and system administration
 - `code-reviewer.md` — Code review with scoring
 - `python-expert.md` — Python development guidance (sample)
@@ -276,25 +294,25 @@ zh-CN, en-US, zh-TW, ja-JP, ko-KR, ru-RU, de-DE, fr-FR, es-ES, it-IT, pt-PT, ar-
 
 ## Security
 
-| Layer | Implementation |
-|-------|---------------|
-| Context Isolation | No direct Node.js access from renderer |
-| Sandbox | WebView runs in isolated process |
-| Electron Fuses | Dangerous features disabled in production |
-| IPC Only | All communication through typed channels |
-| MCP Validation | Only configured servers can connect |
-| No Telemetry | Zero data collection |
+| Layer             | Implementation                            |
+| ----------------- | ----------------------------------------- |
+| Context Isolation | No direct Node.js access from renderer    |
+| Sandbox           | WebView runs in isolated process          |
+| Electron Fuses    | Dangerous features disabled in production |
+| IPC Only          | All communication through typed channels  |
+| MCP Validation    | Only configured servers can connect       |
+| No Telemetry      | Zero data collection                      |
 
 ---
 
 ## Known Issues
 
-| Issue | Status | Workaround |
-|-------|--------|-----------|
-| Auto-update not configured | Planned | Use package manager or download new release |
-| Wayland compositors | Partial | Add `--ozone-platform=wayland` flag |
-| AppImage needs FUSE | Distro-dependent | Install `libfuse2` or `fuse` |
-| Browser login redirect | Open | Login via the in-app window that appears when clicking login. If the external browser opens, copy the `qwen://open?token=xxx` URL from the browser address bar and run `xdg-open "qwen://open?token=YOUR_TOKEN"` in a terminal. This is a known limitation with AppImage protocol handlers on some desktop environments. |
+| Issue                      | Status           | Workaround                                                                                                                                                                                                                                                                                                               |
+| -------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Auto-update not configured | Planned          | Use package manager or download new release                                                                                                                                                                                                                                                                              |
+| Wayland compositors        | Partial          | Add `--ozone-platform=wayland` flag                                                                                                                                                                                                                                                                                      |
+| AppImage needs FUSE        | Distro-dependent | Install `libfuse2` or `fuse`                                                                                                                                                                                                                                                                                             |
+| Browser login redirect     | Open             | Login via the in-app window that appears when clicking login. If the external browser opens, copy the `qwen://open?token=xxx` URL from the browser address bar and run `xdg-open "qwen://open?token=YOUR_TOKEN"` in a terminal. This is a known limitation with AppImage protocol handlers on some desktop environments. |
 
 ---
 
@@ -308,6 +326,7 @@ Contributions welcome.
 4. Push and open a Pull Request
 
 What we need:
+
 - Translations for additional languages
 - Bug reports and fixes
 - Documentation improvements

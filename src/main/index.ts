@@ -1,246 +1,105 @@
-import { app, BrowserWindow, ipcMain, session, dialog, shell, Tray, Menu, MenuItem, MenuItemConstructorOptions, nativeImage } from "electron";
+/**
+ * Qwen Desktop for Linux — Main Entry Point
+ *
+ * This is the Electron app bootstrap. It:
+ * - Configures app flags (GPU, sandbox, etc.)
+ * - Creates the main BrowserWindow loading chat.qwen.ai
+ * - Registers IPC handlers for renderer ↔ main communication
+ * - Sets up MCP server management
+ * - Handles app lifecycle (quit, activate, deep links)
+ * - Builds the application menu
+ */
+
+import {
+  app,
+  BrowserWindow,
+  Menu,
+  MenuItemConstructorOptions,
+  dialog,
+  nativeImage,
+} from "electron";
 import path from "path";
 import fs from "fs";
+import { autoUpdater } from "electron-updater";
 import settings from "electron-settings";
-import windowStateKeeper from "electron-window-state";
 import { McpProxy } from "../mcp/proxy.js";
 import { adaptConfig } from "./mcp-config.js";
-import { getPlatformName, ensureRuntimesExecutable, getBunPath } from "./runtime.js";
+import {
+  getPlatformName,
+  ensureRuntimesExecutable,
+  getBunPath,
+} from "./runtime.js";
 import { setupAutoUpdater } from "./updater.js";
-import { autoUpdater } from "electron-updater";
-import type { McpConfig, DialogOptions } from "../shared/types.js";
-
-// === Constants ===
-
-const SKILLS_DIR = path.join(app.getPath("userData"), "skills");
+import { createWindow } from "./window-manager.js";
+import { registerIpcHandlers, MCP_CONFIG_KEY } from "./ipc-handlers.js";
+import {
+  configureApp,
+  setupProtocolHandler,
+  handleDeepLink,
+  isQuitting,
+  setQuitting,
+} from "./app-lifecycle.js";
+import {
+  ensureSkillsDir,
+  getAvailableSkills,
+  injectSkill,
+  openSkillsFolder,
+  buildSkillsMenuTemplate,
+} from "./skills-manager.js";
+import type { McpConfig } from "../shared/types.js";
 
 // === Constants ===
 const APP_VERSION = app.getVersion();
-const USER_AGENT_SUFFIX = `AliDesktop(QWENCHAT/${APP_VERSION})`;
 const WEBVIEW_URL = "https://chat.qwen.ai";
-const MCP_CONFIG_KEY = "mcp_config";
+
+/**
+ * Compare two semver strings.
+ * Returns -1 if a < b, 0 if equal, 1 if a > b.
+ * Used for update version checks without external dependencies.
+ */
+function compareVersions(a: string, b: string): number {
+  const pa = a.split(".").map(Number);
+  const pb = b.split(".").map(Number);
+  for (let i = 0; i < 3; i++) {
+    const diff = (pa[i] || 0) - (pb[i] || 0);
+    if (diff !== 0) return Math.sign(diff);
+  }
+  return 0;
+}
 
 // === MCP Proxy Instance ===
+// Singleton that manages all MCP server connections
 const mcpServer = new McpProxy();
 
-// === Window State (persistence) ===
+// === Window State ===
 let mainWindow: BrowserWindow | null = null;
-let appTray: Tray | null = null;
-let isQuitting = false;
+
+/** Getter for mainWindow — used by IPC handlers and skills module */
+const getMainWindow = (): BrowserWindow | null => mainWindow;
 
 /**
- * Get app version
+ * Load the app icon from bundled resources.
+ * Tries multiple paths to support both dev and packaged modes.
  */
-const getAppVersion = async (): Promise<string> => APP_VERSION;
-
-/**
- * Get platform info
- */
-const getPlatformInfo = async (): Promise<{
-  platform: string;
-  arch: string;
-}> => ({
-  platform: process.platform,
-  arch: process.arch,
-});
-
-/**
- * Open DevTools
- */
-const openDevTool = async (): Promise<void> => {
-  mainWindow?.webContents.openDevTools({ mode: "right" });
-};
-
-/**
- * Toggle hidden DevTools
- */
-const toggleHiddenDevTools = async (): Promise<void> => {
-  if (mainWindow?.webContents.isDevToolsOpened()) {
-    mainWindow.webContents.closeDevTools();
-  } else {
-    mainWindow?.webContents.openDevTools({ mode: "detach" });
+function getAppIcon(): Electron.NativeImage | undefined {
+  const iconPaths = [
+    path.join(process.resourcesPath, "icon.png"),
+    path.join(__dirname, "../../resources/icon.png"),
+    path.join(process.cwd(), "resources/icon.png"),
+  ];
+  for (const p of iconPaths) {
+    try {
+      if (fs.existsSync(p)) return nativeImage.createFromPath(p);
+    } catch {}
   }
-};
+  return undefined;
+}
+
+// === MCP Config Management ===
 
 /**
- * Open external link in browser
- */
-const openExternalLink = async (_event: any, url: string): Promise<void> => {
-  await shell.openExternal(url);
-};
-
-/**
- * Show native dialog
- */
-const showNativeDialog = async (options: DialogOptions): Promise<void> => {
-  await dialog.showMessageBox(mainWindow!, {
-    title: options.title || "Qwen",
-    message: options.message,
-    type: options.type || "info",
-    buttons: options.buttons || ["OK"],
-    defaultId: options.defaultId || 0,
-  });
-};
-
-/**
- * Request file access (native file picker)
- */
-const requestFileAccess = async (
-  purpose: string,
-  returnFile?: boolean,
-): Promise<{ filePath: string; file?: string }> => {
-  const { filePaths } = await dialog.showOpenDialog(mainWindow!, {
-    properties: ["openFile"],
-    title: purpose,
-  });
-
-  if (!filePaths || filePaths.length === 0) {
-    return { filePath: "" };
-  }
-
-  const result: { filePath: string; file?: string } = {
-    filePath: filePaths[0],
-  };
-
-  if (returnFile) {
-    result.file = await fs.promises.readFile(filePaths[0], "utf-8");
-  }
-
-  return result;
-};
-
-// === MCP IPC Handlers ===
-
-/**
- * List tools for a server
- */
-const mcpClientToolList = async (_event: any, serverName: string) => {
-  try {
-    console.log(`[IPC] Listing tools for server: "${serverName}"`);
-    console.log(
-      "[IPC] Available servers:",
-      Object.keys(mcpServer.getMCPServers()),
-    );
-    const list = await mcpServer.listTools({ serverName });
-    console.log(`[IPC] Tools for "${serverName}":`, list);
-    return list;
-  } catch (error) {
-    console.error(`[IPC] mcpClientToolList error for "${serverName}":`, error);
-    throw error;
-  }
-};
-
-/**
- * Get MCP config
- */
-const mcpClientGetConfig = async (): Promise<McpConfig> => {
-  return mcpServer.getMCPServers();
-};
-
-/**
- * Call MCP tool
- */
-const mcpClientToolCall = async (_event: any, params: any) => {
-  try {
-    const result = await mcpServer.callTool(params);
-    return result;
-  } catch (error) {
-    console.error("[IPC] mcpClientToolCall error:", error);
-    throw error;
-  }
-};
-
-/**
- * Update MCP config
- */
-const mcpClientUpdateConfig = async (
-  _event: any,
-  config: McpConfig,
-): Promise<McpConfig> => {
-  try {
-    console.log("[IPC] Updating MCP config:", JSON.stringify(config, null, 2));
-    console.log("[IPC] Config keys:", Object.keys(config));
-
-    // Log each server config before adapting
-    for (const [name, serverConfig] of Object.entries(config)) {
-      console.log(`[IPC] Server "${name}":`, {
-        command: serverConfig.command,
-        args: serverConfig.args,
-        transportType: serverConfig.transportType,
-      });
-    }
-
-    const adapted = adaptConfig(config);
-    console.log("[IPC] Adapted config:", JSON.stringify(adapted, null, 2));
-
-    await mcpServer.setMCPServers(adapted);
-    await settings.set(MCP_CONFIG_KEY, config as any);
-    console.log("[IPC] MCP config saved successfully");
-    return mcpClientGetConfig();
-  } catch (error) {
-    console.error("[IPC] mcpClientUpdateConfig error:", error);
-    throw error;
-  }
-};
-
-/**
- * Connect to MCP servers (initialize all)
- */
-const mcpClientConnect = async (): Promise<void> => {
-  try {
-    const config = await loadMcpConfig();
-    if (Object.keys(config).length > 0) {
-      const adapted = adaptConfig(config);
-      await mcpServer.setMCPServers(adapted);
-      console.log("[IPC] MCP servers connected:", Object.keys(config));
-    }
-  } catch (error) {
-    console.error("[IPC] mcpClientConnect error:", error);
-  }
-};
-
-/**
- * Close MCP connections
- */
-const mcpClientClose = async (): Promise<void> => {
-  await mcpServer.disconnectAll();
-};
-
-// === Theme & Localization ===
-
-const switchTheme = async (theme: "light" | "dark"): Promise<void> => {
-  // Store theme preference
-  await settings.set("app_theme", theme);
-  // Notify renderer
-  mainWindow?.webContents.send("event_from_main", {
-    type: "theme_changed",
-    payload: theme,
-  });
-};
-
-const switchLn = async (language: string): Promise<void> => {
-  await settings.set("app_language", language);
-  mainWindow?.webContents.send("event_from_main", {
-    type: "language_changed",
-    payload: language,
-  });
-};
-
-const updateTitleBarForSystemTheme = async (isDark: boolean): Promise<void> => {
-  // Linux: Handle GTK theme detection
-  if (mainWindow) {
-    mainWindow.webContents.send("event_from_main", {
-      type: "system_theme_changed",
-      payload: isDark,
-    });
-  }
-};
-
-// === Helpers ===
-
-/**
- * Load MCP config from electron-settings
- * If no config exists, creates default MCP servers (Fetch, Filesystem, Sequential-Thinking)
+ * Load MCP config from electron-settings.
+ * If no config exists, creates default MCP servers (Desktop-Commander, Fetch, Filesystem, Sequential-Thinking).
  */
 async function loadMcpConfig(): Promise<McpConfig> {
   try {
@@ -248,15 +107,16 @@ async function loadMcpConfig(): Promise<McpConfig> {
       const config = await settings.get(MCP_CONFIG_KEY);
       const parsed = (config as unknown as McpConfig) || {};
       if (Object.keys(parsed).length > 0) {
-        return parsed; // User has custom config, use it
+        return parsed;
       }
     }
-
-    // First launch — create default MCP servers
     console.log("[Config] No MCP config found, creating defaults...");
     const defaults = getDefaultMcpConfig();
     await settings.set(MCP_CONFIG_KEY, defaults as any);
-    console.log("[Config] ✅ Default MCP servers created:", Object.keys(defaults));
+    console.log(
+      "[Config] ✅ Default MCP servers created:",
+      Object.keys(defaults),
+    );
     return defaults;
   } catch (error) {
     console.error("[Config] Failed to load MCP config:", error);
@@ -265,7 +125,8 @@ async function loadMcpConfig(): Promise<McpConfig> {
 }
 
 /**
- * Get default MCP server configuration for first-time users
+ * Default MCP server configuration for first-time users.
+ * All servers use the bundled bun runtime.
  */
 function getDefaultMcpConfig(): McpConfig {
   const bunPath = getBunPath();
@@ -298,708 +159,226 @@ function getDefaultMcpConfig(): McpConfig {
   };
 }
 
+// === MCP Connect/Close ===
 
-// === Skills Management ===
-function ensureSkillsDir() {
-  if (!fs.existsSync(SKILLS_DIR)) {
-    fs.mkdirSync(SKILLS_DIR, { recursive: true });
-    // Create a sample skill
-    const sampleSkill = "# Python Expert\n\nAct as a senior Python developer. Focus on PEP8, efficiency, and best practices.";
-    fs.writeFileSync(path.join(SKILLS_DIR, "python-expert.md"), sampleSkill);
-  }
-}
-
-async function getAvailableSkills(): Promise<string[]> {
-  ensureSkillsDir();
+/** Connect to all configured MCP servers */
+async function mcpClientConnect(): Promise<void> {
   try {
-    const files = await fs.promises.readdir(SKILLS_DIR);
-    return files.filter(f => f.endsWith('.md') || f.endsWith('.txt'));
+    const config = await loadMcpConfig();
+    if (Object.keys(config).length > 0) {
+      const adapted = adaptConfig(config);
+      await mcpServer.setMCPServers(adapted);
+      console.log("[IPC] MCP servers connected:", Object.keys(config));
+    }
   } catch (error) {
-    console.error("[Skills] Error reading skills dir:", error);
-    return [];
+    console.error("[IPC] mcpClientConnect error:", error);
   }
 }
 
-async function injectSkill(skillName: string) {
-async function injectSkill(skillName: string) {
-  if (!mainWindow) return;
-  
-  const skillPath = path.join(SKILLS_DIR, skillName);
-  try {
-    const content = await fs.promises.readFile(skillPath, 'utf-8');
-    // Safely encode the content to prevent syntax errors in the injected script
-    const safeContent = JSON.stringify(content);
-    
-    const jsCode = `
-      (function() {
-        const text = ${safeContent};
-        const selectors = [
-          'textarea[data-id="chat-input"]',
-          'textarea',
-          'div[role="textbox"]',
-          'div[contenteditable="true"]'
-        ];
-        let el = null;
-        for (const sel of selectors) {
-          el = document.querySelector(sel);
-          if (el) break;
-        }
-        
-        if (el) {
-          el.focus();
-          if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') {
-            el.value = text + (el.value || '');
-            el.dispatchEvent(new Event('input', { bubbles: true }));
-            el.dispatchEvent(new Event('change', { bubbles: true }));
-          } else {
-            el.textContent = text + (el.textContent || '');
-            el.dispatchEvent(new Event('input', { bubbles: true }));
-          }
-        }
-      })();
-    `;
-    await mainWindow.webContents.executeJavaScript(jsCode);
-    console.log(`[Skills] Injected: ${skillName}`);
-  } catch (error) {
-    const errMsg = error instanceof Error ? error.message : String(error);
-    console.error(`[Skills] Failed to inject ${skillName}:`, error);
-    dialog.showErrorBox('Skill Error', `Failed to load skill: ${skillName}\n\nError: ${errMsg}\nDir: ${SKILLS_DIR}`);
-  }
+/** Disconnect all MCP servers */
+async function mcpClientClose(): Promise<void> {
+  await mcpServer.disconnectAll();
 }
-
-function openSkillsFolder() {
-  ensureSkillsDir();
-  shell.openPath(SKILLS_DIR);
-}
-
-/**
- * Create the main window
- * Loads chat.qwen.ai directly with MCP bridge via preload script
- */
-function createWindow() {
-  console.log("[Window] Creating window...");
-  console.log("[Window] __dirname:", __dirname);
-  console.log("[Window] cwd:", process.cwd());
-  console.log(
-    "[Window] app.getAppPath():",
-    require("electron").app.getAppPath(),
-  );
-
-  // Try multiple possible paths for preload
-  const possiblePaths = [
-    path.join(__dirname, "../preload/index.js"),
-    path.join(__dirname, "preload/index.js"),
-    path.join(process.cwd(), "out/preload/index.js"),
-    path.join(process.cwd(), "src/preload/index.ts"),
-  ];
-
-  let preloadPath = possiblePaths[0];
-  for (const p of possiblePaths) {
-    const fs = require("fs");
-    if (fs.existsSync(p)) {
-      preloadPath = p;
-      console.log(`[Window] ✅ Found preload at: ${p}`);
-      break;
-    } else {
-      console.log(`[Window] ❌ Not found: ${p}`);
-    }
-  }
-
-  console.log("[Window] Using preload path:", preloadPath);
-
-  // Don't use windowStateKeeper for now - use defaults
-  mainWindow = new BrowserWindow({
-    x: 100,
-    y: 100,
-    width: 1200,
-    height: 800,
-    minWidth: 800,
-    minHeight: 600,
-    title: "Qwen",
-    show: false, // Don.t show until ready
-    autoHideMenuBar: false,
-    webPreferences: {
-      preload: preloadPath,
-      sandbox: false,
-      nodeIntegration: false,
-      contextIsolation: true,
-      webSecurity: true,
-      allowRunningInsecureContent: false,
-    },
-    autoHideMenuBar: true,
-  });
-
-  console.log("[Window] ✅ BrowserWindow created");
-
-  // Show window when ready
-  mainWindow.once("ready-to-show", () => {
-    console.log("[Window] 🎉 Ready to show");
-    mainWindow?.show();
-  });
-
-  mainWindow.on("show", () => {
-    console.log("[Window] 👁️ Window shown");
-  });
-
-  // Set custom User-Agent for desktop app detection
-  // Use standard Chrome UA + desktop app suffix
-  const chromeVersion = "131.0.0.0";
-  const desktopUA = `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chromeVersion} Safari/537.36 ${USER_AGENT_SUFFIX}`;
-  mainWindow.webContents.setUserAgent(desktopUA);
-
-  console.log("[Window] User-Agent:", desktopUA);
-
-  // Load chat.qwen.ai
-  console.log("[Window] Loading:", WEBVIEW_URL);
-  mainWindow.setMenuBarVisibility(true);
-  mainWindow.setAutoHideMenuBar(false);
-  mainWindow.loadURL(WEBVIEW_URL);
-
-  // === TEMPORARY: Network Interception Logger ===
-  // Captures ALL network requests to discover Qwen's API endpoints
-  const ses = mainWindow!.webContents.session;
-
-  ses.webRequest.onBeforeRequest(
-    { urls: ["*://*/*"] },
-    (details, callback) => {
-      // Only log XHR requests (images, CSS, etc. excluded)
-      if (details.resourceType === "xhr") {
-        console.log(`[NET-LOG] ${details.method} ${details.url} (${details.resourceType})`);
-        if (details.uploadData) {
-          try {
-            const body = details.uploadData
-              .map((d: any) => d.bytes?.toString() || d.file || "")
-              .join("");
-            if (body.length < 2000) {
-              console.log(`[NET-LOG] Body:`, body.substring(0, 500));
-            }
-          } catch (e) {}
-        }
-      }
-      callback({});
-    }
-  );
-
-  ses.webRequest.onSendHeaders(
-    { urls: ["*://*/*"] },
-    (details) => {
-      if (details.resourceType === "xhr") {
-        console.log(`[NET-LOG] Headers for ${details.url}:`, JSON.stringify(details.requestHeaders, null, 2).substring(0, 500));
-      }
-    }
-  );
-
-  // CDP Debugger for capturing response bodies
-  mainWindow!.webContents.debugger.attach("1.3");
-  mainWindow!.webContents.debugger.sendCommand("Network.enable");
-
-  mainWindow!.webContents.debugger.on(
-    "message",
-    (_event: any, method: string, params: any) => {
-      if (method === "Network.responseReceived") {
-        const { requestId, response, type } = params;
-        // Only log XHR/Fetch responses
-        if (type === "XHR" || type === "Fetch") {
-          console.log(
-            `[NET-RESP] ${response.status} ${response.url} (${type})`,
-          );
-          // Try to get the response body
-          const mw = mainWindow;
-          if (mw) {
-            mw.webContents.debugger.sendCommand(
-              "Network.getResponseBody",
-              { requestId },
-            ).then((result: any) => {
-              if (result && result.body) {
-                const bodyPreview = result.body.substring(0, 500);
-                console.log(`[NET-RESP] Body:`, bodyPreview);
-              }
-            }).catch((err: any) => {
-              // Body might not be available for all requests
-            });
-          }
-        }
-      }
-    },
-  );
-  // === END TEMPORARY ===
-
-  // Log window events for debugging
-  mainWindow.webContents.on("did-start-loading", () => {
-    console.log("[Window] 🔄 Started loading...");
-  });
-
-  mainWindow.webContents.on("did-stop-loading", () => {
-    console.log("[Window] ⏹️ Stopped loading");
-  });
-
-  mainWindow.webContents.on("did-finish-load", () => {
-    console.log("[Window] ✅ Page finished loading");
-    console.log("[Window] URL:", mainWindow?.webContents.getURL());
-
-    // Inject CSS to hide mobile download overlay
-    mainWindow?.webContents
-      .insertCSS(
-        `
-      #low-version-browser,
-      #downLoad_app,
-      #get-the-app,
-      .mobile-download-overlay {
-        display: none !important;
-      }
-      #desktop-app,
-      .desktop-container {
-        display: block !important;
-      }
-    `,
-      )
-      .then(() => {
-        console.log("[Window] ✅ Injected CSS to hide mobile overlay");
-      })
-      .catch((err) => {
-        console.error("[Window] Failed to inject CSS:", err);
-      });
-
-    console.log("[IPC] Initializing MCP...");
-    mcpClientConnect();
-  });
-
-  mainWindow.webContents.on(
-    "did-fail-load",
-    (_event, errorCode, errorDescription, validatedURL) => {
-      console.error("[Window] ❌ Failed to load!");
-      console.error("[Window] Error code:", errorCode);
-      console.error("[Window] Error:", errorDescription);
-      console.error("[Window] URL:", validatedURL);
-    },
-  );
-
-  mainWindow.on("close", (event) => {
-    if (!isQuitting) {
-      console.log("[Window] Close event fired - hiding to tray");
-      event.preventDefault();
-      if (mainWindow) {
-        mainWindow.hide();
-      }
-    }
-  });
-
-  // Handle external links
-  mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url);
-    return { action: "deny" };
-  });
-
-  // Linux: Handle system tray
-  if (process.platform === "linux") {
-    setupSystemTray();
-  }
-
-  // DevTools shortcut
-  mainWindow.webContents.on("before-input-event", (event, input) => {
-    if (
-      input.key === "F12" ||
-      (input.control && input.shift && input.key === "I")
-    ) {
-      openDevTool();
-      event.preventDefault();
-    }
-  });
-}
-
-// === System Tray (Linux) ===
-
-function setupSystemTray() {
-  console.log("[Tray] Setting up system tray...");
-
-  // Get the icon path - try multiple locations
-  const iconPaths = [
-    path.join(process.resourcesPath, "icon.png"),
-    path.join(__dirname, "../../resources/icon.png"),
-    path.join(process.cwd(), "resources/icon.png"),
-  ];
-
-  let iconPath = iconPaths[0];
-  for (const p of iconPaths) {
-    if (fs.existsSync(p)) {
-      iconPath = p;
-      console.log(`[Tray] ✅ Found icon at: ${p}`);
-      break;
-    }
-  }
-
-  try {
-    // Create tray icon
-    const trayIcon = nativeImage.createFromPath(iconPath);
-    
-    // Resize for tray (Linux typically expects 16-24px icons)
-    const resizedIcon = trayIcon.resize({ width: 16, height: 16 });
-    
-    appTray = new Tray(resizedIcon);
-    appTray.setToolTip("Qwen Desktop");
-
-    // Create context menu
-    const contextMenu = Menu.buildFromTemplate([
-      {
-        label: "Show Qwen",
-        click: () => {
-          if (mainWindow) {
-            if (mainWindow.isMinimized()) {
-              mainWindow.restore();
-            }
-            mainWindow.show();
-            mainWindow.focus();
-          } else {
-            createWindow();
-          }
-        },
-      },
-      {
-        label: "Hide Qwen",
-        click: () => {
-          mainWindow?.hide();
-        },
-      },
-      { type: "separator" },
-      {
-        label: "Toggle DevTools",
-        click: () => {
-          openDevTool();
-        },
-      },
-      { type: "separator" },
-      {
-        label: "Quit",
-        click: () => {
-          isQuitting = true;
-          if (appTray) {
-            appTray.destroy();
-            appTray = null;
-          }
-          mainWindow = null;
-          app.quit();
-        },
-      },
-    ]);
-
-    appTray.setContextMenu(contextMenu);
-
-    // Click on tray icon to show/hide window
-    appTray.on("click", () => {
-      if (mainWindow && mainWindow.isVisible()) {
-        mainWindow.hide();
-      } else if (mainWindow) {
-        mainWindow.show();
-        mainWindow.focus();
-      } else {
-        createWindow();
-      }
-    });
-
-    // Double-click to restore window
-    appTray.on("double-click", () => {
-      if (mainWindow) {
-        if (mainWindow.isMinimized()) {
-          mainWindow.restore();
-        }
-        if (!mainWindow.isVisible()) {
-          mainWindow.show();
-        }
-        mainWindow.focus();
-      }
-    });
-
-    console.log("[Tray] ✅ System tray setup complete");
-  } catch (error) {
-    console.error("[Tray] ❌ Failed to setup system tray:", error);
-  }
-}
-
-// === IPC Registration ===
-
-function registerIpcHandlers() {
-  // App management
-  ipcMain.handle("get_app_version", getAppVersion);
-  ipcMain.handle("get_platform_info", getPlatformInfo);
-  ipcMain.handle("open_devtool", openDevTool);
-  ipcMain.handle("toggle_hidden_devtools", toggleHiddenDevTools);
-  ipcMain.handle("open_external_link", openExternalLink);
-  ipcMain.handle("show_native_dialog", (_, options) =>
-    showNativeDialog(options),
-  );
-  ipcMain.handle("request_file_access", (_, purpose, returnFile) =>
-    requestFileAccess(purpose, returnFile),
-  );
-
-  // MCP handlers
-  ipcMain.handle("mcp_client_connect", mcpClientConnect);
-  ipcMain.handle("mcp_client_close", mcpClientClose);
-  ipcMain.handle("mcp_client_tool_list", mcpClientToolList);
-  ipcMain.handle("mcp_client_tool_call", mcpClientToolCall);
-  ipcMain.handle("mcp_client_get_config", mcpClientGetConfig);
-  ipcMain.handle("mcp_client_update_config", mcpClientUpdateConfig);
-
-  // Theme & localization
-  ipcMain.handle("switch_theme", (_, theme) => switchTheme(theme));
-  ipcMain.handle("switch_ln", (_, language) => switchLn(language));
-  ipcMain.handle("update_title_bar_for_system_theme", (_, isDark) =>
-    updateTitleBarForSystemTheme(isDark),
-  );
-
-  // Event forwarding
-  ipcMain.on("event_to_main", (_, data) => {
-    mainWindow?.webContents.send("event_from_main", data);
-  });
-}
-
-// === Deep Link / Protocol Handler ===
-
-function setupProtocolHandler() {
-  if (process.defaultApp) {
-    if (process.argv.length >= 2) {
-      app.setAsDefaultProtocolClient("qwen", process.execPath, [
-        process.argv[1],
-      ]);
-    }
-  } else {
-    app.setAsDefaultProtocolClient("qwen");
-  }
-
-  // Handle qwen:// URLs
-  app.on("open-url", (event, url) => {
-    event.preventDefault();
-    handleDeepLink(url);
-  });
-
-  // Handle second instance (Linux) — always create window if none exists
-  app.on("second-instance", (_event, commandLine) => {
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore();
-      mainWindow.focus();
-    } else {
-      createWindow();
-    }
-
-    const url = commandLine.find((arg) => arg.startsWith("qwen://"));
-    if (url) handleDeepLink(url);
-  });
-}
-
-function handleDeepLink(url: string) {
-  console.log("[DeepLink] Handling URL:", url);
-  // Parse token from qwen://open?token=xxx
-  const urlObj = new URL(url);
-  if (urlObj.pathname === "/open") {
-    const token = urlObj.searchParams.get("token");
-    if (token) {
-      console.log("[DeepLink] Auth token received");
-      // Send token to renderer for authentication
-      mainWindow?.webContents.send("event_from_main", {
-        type: "auth_token",
-        payload: { token },
-      });
-    }
-  }
-}
-
-// === App Lifecycle ===
-
-// Disable GPU acceleration to prevent crashes on Linux
-app.commandLine.appendSwitch("disable-gpu");
-app.commandLine.appendSwitch("disable-gpu-compositing");
-app.commandLine.appendSwitch("disable-software-rasterizer");
-app.commandLine.appendSwitch("no-sandbox");
-app.commandLine.appendSwitch("disable-dev-shm-usage");
-app.commandLine.appendSwitch("disable-gpu-sandbox");
-app.commandLine.appendSwitch("use-gl", "swiftshader");
-app.commandLine.appendSwitch("ignore-gpu-blocklist");
-app.commandLine.appendSwitch("disable-features", "VizDisplayCompositor");
-
-// Debug flags - Enable remote debugging for chrome-devtools-mcp
-app.commandLine.appendSwitch("enable-logging");
-app.commandLine.appendSwitch("v", "1");
-app.commandLine.appendSwitch("remote-debugging-port", "9222");
-app.commandLine.appendSwitch("remote-allow-origins", "*");
-
 
 // === Application Menu ===
-function setupMenu() {
+
+/**
+ * Build and set the application menu.
+ * Includes: App menu (update check, quit), Edit, View, and Skills submenu.
+ */
+async function setupMenu(): Promise<void> {
+  const skillsItems = await buildSkillsMenuTemplate(getMainWindow);
+
   const template: MenuItemConstructorOptions[] = [
     {
-      label: 'Qwen',
+      label: "Qwen",
       submenu: [
-        { 
-          label: 'Check for Updates', 
+        {
+          label: "Check for Updates",
           click: async () => {
             console.log("[Updater] Manual check triggered");
             if (!mainWindow) return;
-
             try {
-              // Show loading dialog
-              const loadingDialog = dialog.showMessageBoxSync(mainWindow, {
-                type: 'info',
-                title: 'Checking for Updates',
-                message: 'Checking for updates...',
-                buttons: [],
-                noLink: true
-              });
-
-              // Check for updates
               const updateInfo = await autoUpdater.checkForUpdates();
-              
               if (updateInfo && updateInfo.updateInfo) {
                 const currentVersion = app.getVersion();
                 const latestVersion = updateInfo.updateInfo.version;
-                
-                if (latestVersion !== currentVersion) {
-                  const { response } = dialog.showMessageBoxSync(mainWindow, {
-                    type: 'info',
-                    title: 'Update Available',
+                // Only offer update if latest is newer (not a downgrade)
+                if (compareVersions(latestVersion, currentVersion) > 0) {
+                  const response = dialog.showMessageBoxSync(mainWindow, {
+                    icon: getAppIcon(),
+                    type: "info",
+                    title: "Update Available",
                     message: `A new version (${latestVersion}) is available! Current version: ${currentVersion}.`,
-                    buttons: ['Download', 'Later'],
-                    defaultId: 0
+                    buttons: ["Download", "Later"],
+                    defaultId: 0,
                   });
-                  if (response === 0) {
-                    autoUpdater.downloadUpdate();
-                  }
+                  if (response === 0) autoUpdater.downloadUpdate();
                 } else {
                   dialog.showMessageBoxSync(mainWindow, {
-                    type: 'info',
-                    title: 'Up to Date',
-                    message: `You are using the latest version (${currentVersion}).`
+                    icon: getAppIcon(),
+                    type: "info",
+                    title: "Up to Date",
+                    message: `You are using the latest version (${currentVersion}).`,
                   });
                 }
               } else {
                 dialog.showMessageBoxSync(mainWindow, {
-                  type: 'info',
-                  title: 'Up to Date',
-                  message: 'You are using the latest version.'
+                  icon: getAppIcon(),
+                  type: "info",
+                  title: "Up to Date",
+                  message: "You are using the latest version.",
                 });
               }
             } catch (error) {
               console.error("[Updater] Check failed:", error);
               dialog.showMessageBoxSync(mainWindow, {
-                type: 'error',
-                title: 'Update Check Failed',
-                message: `Could not check for updates.\n\nError: ${error instanceof Error ? error.message : error}`
+                icon: getAppIcon(),
+                type: "error",
+                title: "Update Check Failed",
+                message: `Could not check for updates.\n\nError: ${error instanceof Error ? error.message : error}`,
               });
             }
-          }
+          },
         },
-        { type: 'separator' },
-        { role: 'quit' }
-      ]
+        { type: "separator" },
+        { role: "quit" },
+      ],
     },
     {
-      label: 'Edit',
+      label: "Edit",
       submenu: [
-        { role: 'undo' },
-        { role: 'redo' },
-        { type: 'separator' },
-        { role: 'cut' },
-        { role: 'copy' },
-        { role: 'paste' },
-        { role: 'delete' },
-        { role: 'selectAll' }
-      ]
+        { role: "undo" },
+        { role: "redo" },
+        { type: "separator" },
+        { role: "cut" },
+        { role: "copy" },
+        { role: "paste" },
+        { role: "delete" },
+        { role: "selectAll" },
+      ],
     },
     {
-      label: 'View',
+      label: "View",
       submenu: [
-        { role: 'reload' },
-        { role: 'forceReload' },
-        { role: 'toggleDevTools' },
-        { type: 'separator' },
-        { role: 'resetZoom' },
-        { role: 'zoomIn' },
-        { role: 'zoomOut' },
-        { type: 'separator' },
-        { role: 'togglefullscreen' }
-      ]
+        { role: "reload" },
+        { role: "forceReload" },
+        { role: "toggleDevTools" },
+        { type: "separator" },
+        { role: "resetZoom" },
+        { role: "zoomIn" },
+        { role: "zoomOut" },
+        { type: "separator" },
+        { role: "togglefullscreen" },
+      ],
     },
     {
-      label: 'Skills',
-      id: 'skills-menu',
-      submenu: [
-        { label: 'Open Skills Folder', click: openSkillsFolder },
-        { type: 'separator' }
-        // Dynamic skills will be added here
-      ]
-    }
+      label: "Skills",
+      submenu: skillsItems,
+    },
   ];
 
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
-  
-  // Update Skills submenu dynamically
-  updateSkillsMenu();
 }
 
-async function updateSkillsMenu() {
-  const menu = Menu.getApplicationMenu();
-  if (!menu) return;
+// === App Bootstrap ===
 
-  const skillsItem = menu.getMenuItemById('skills-menu');
-  if (!skillsItem || !skillsItem.submenu) return;
-
-  // Clear existing dynamic items (keep first two: Open Folder and Separator)
-  while (skillsItem.submenu.items.length > 2) {
-    skillsItem.submenu.items.pop();
-  }
-
-  const skills = await getAvailableSkills();
-  skills.forEach(skill => {
-    const item = new MenuItem({
-      label: skill.replace('.md', '').replace('.txt', ''),
-      click: () => injectSkill(skill)
-    });
-    skillsItem.submenu?.append(item);
-  });
-}
+// Configure app flags BEFORE ready (GPU, sandbox, platform hints)
+configureApp();
 
 app.whenReady().then(async () => {
-  setupMenu();
   console.log("[App] Starting Qwen Desktop for Linux");
   console.log("[App] Platform:", getPlatformName());
   console.log("[App] Version:", APP_VERSION);
 
   try {
-    // Ensure bundled runtimes are executable
+    // Make bundled runtimes executable (dev mode only)
     await ensureRuntimesExecutable();
+    ensureSkillsDir();
 
-    // Register IPC handlers
-    registerIpcHandlers();
+    // Setup protocol handler (qwen:// deep links)
+    setupProtocolHandler({
+      onDeepLink: (url) => handleDeepLink(url, mainWindow),
+      onCreateWindow: () => {
+        if (mainWindow) {
+          if (mainWindow.isMinimized()) mainWindow.restore();
+          mainWindow.focus();
+        } else {
+          mainWindow = createWindow({
+            onMcpClientConnect: mcpClientConnect,
+            onOpenDevTool: (win) =>
+              win.webContents.openDevTools({ mode: "right" }),
+            setQuitting,
+            isQuitting,
+            onDeepLink: (url) => handleDeepLink(url, mainWindow),
+          });
+        }
+      },
+    });
 
-    // Setup protocol handler
-    setupProtocolHandler();
+    // Register IPC handlers (app management, MCP, theme, dialogs)
+    registerIpcHandlers({
+      getMainWindow,
+      mcpServer,
+      adaptConfig,
+      settings,
+      loadMcpConfig,
+      getDefaultMcpConfig,
+      APP_VERSION,
+    });
 
-    // Setup auto-updater (only in production)
+    // Auto-updater (production only)
     if (app.isPackaged) {
       setupAutoUpdater();
     }
 
-    // Create main window
-    createWindow();
+    // Create main window (loads chat.qwen.ai with MCP bridge)
+    mainWindow = createWindow({
+      onMcpClientConnect: mcpClientConnect,
+      onOpenDevTool: (win) => win.webContents.openDevTools({ mode: "right" }),
+      setQuitting,
+      isQuitting,
+      onDeepLink: (url) => handleDeepLink(url, mainWindow),
+    });
+
+    // Build menu after window creation (so skills menu can populate)
+    await setupMenu();
 
     console.log("[App] ✅ Window created successfully");
 
+    // macOS: re-create window on dock click
     app.on("activate", () => {
       if (BrowserWindow.getAllWindows().length === 0) {
-        createWindow();
+        mainWindow = createWindow({
+          onMcpClientConnect: mcpClientConnect,
+          onOpenDevTool: (win) =>
+            win.webContents.openDevTools({ mode: "right" }),
+          setQuitting,
+          isQuitting,
+          onDeepLink: (url) => handleDeepLink(url, mainWindow),
+        });
       }
     });
   } catch (error) {
     console.error("[App] ❌ Failed to initialize:", error);
-    // Keep app alive even if there's an error
+    // Retry after 1 second
     setTimeout(() => {
-      createWindow();
+      mainWindow = createWindow({
+        onMcpClientConnect: mcpClientConnect,
+        onOpenDevTool: (win) => win.webContents.openDevTools({ mode: "right" }),
+        setQuitting,
+        isQuitting,
+        onDeepLink: (url) => handleDeepLink(url, mainWindow),
+      });
     }, 1000);
   }
 });
 
+// All windows closed — exit only if quitting, otherwise keep alive for tray
 app.on("window-all-closed", () => {
   console.log("[App] All windows closed");
-  if (isQuitting) {
+  if (isQuitting()) {
     console.log("[App] Quitting confirmed - exiting");
     app.exit(0);
   } else {
@@ -1007,13 +386,12 @@ app.on("window-all-closed", () => {
   }
 });
 
+// Before quit: disconnect all MCP servers
 app.on("before-quit", () => {
-  // Just cleanup, don't block quit
   mcpServer.disconnectAll().catch(() => {});
-  mcpServer.stopHTTP();
 });
 
-// Handle uncaught exceptions
+// Global error handlers
 process.on("uncaughtException", (error) => {
   console.error("[App] Uncaught exception:", error);
 });

@@ -12,6 +12,7 @@ const config: ForgeConfig = {
     executableName: "qwen",
     icon: path.join(__dirname, "resources/icon"),
     asar: true,
+    out: "dist/forge-out",
   },
   rebuildConfig: {},
   makers: [

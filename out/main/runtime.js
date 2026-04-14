@@ -21,7 +21,8 @@ const electron_1 = require("electron");
 function getRuntimePaths() {
     const platform = process.platform;
     const arch = process.arch;
-    // In production, process.resourcesPath points to /opt/Qwen Desktop/resources/
+    // In production, process.resourcesPath points to the app's resources dir
+    // electron-builder nests our project resources/ inside it, creating resources/resources/
     // In development, fall back to project root
     const resourcesPath = electron_1.app.isPackaged
         ? process.resourcesPath
@@ -29,24 +30,42 @@ function getRuntimePaths() {
     if (platform === 'linux') {
         const archDir = arch === 'arm64' ? 'linux-arm64' : 'linux-x64';
         return {
-            bun: path_1.default.join(resourcesPath, 'resources', 'bun', archDir, 'bun'),
-            uv: path_1.default.join(resourcesPath, 'resources', 'uv', archDir, 'uv'),
-            uvx: path_1.default.join(resourcesPath, 'resources', 'uv', archDir, 'uvx'),
+            bun: electron_1.app.isPackaged
+                ? path_1.default.join(resourcesPath, 'resources', 'bun', archDir, 'bun')
+                : path_1.default.join(resourcesPath, 'bun', archDir, 'bun'),
+            uv: electron_1.app.isPackaged
+                ? path_1.default.join(resourcesPath, 'resources', 'uv', archDir, 'uv')
+                : path_1.default.join(resourcesPath, 'uv', archDir, 'uv'),
+            uvx: electron_1.app.isPackaged
+                ? path_1.default.join(resourcesPath, 'resources', 'uv', archDir, 'uvx')
+                : path_1.default.join(resourcesPath, 'uv', archDir, 'uvx'),
         };
     }
     if (platform === 'darwin') {
         const archDir = arch === 'arm64' ? 'darwin-arm64' : 'darwin-x64';
         return {
-            bun: path_1.default.join(resourcesPath, 'resources', 'bun', archDir, 'bun'),
-            uv: path_1.default.join(resourcesPath, 'resources', 'uv', archDir, 'uv'),
-            uvx: path_1.default.join(resourcesPath, 'resources', 'uv', archDir, 'uvx'),
+            bun: electron_1.app.isPackaged
+                ? path_1.default.join(resourcesPath, 'resources', 'bun', archDir, 'bun')
+                : path_1.default.join(resourcesPath, 'bun', archDir, 'bun'),
+            uv: electron_1.app.isPackaged
+                ? path_1.default.join(resourcesPath, 'resources', 'uv', archDir, 'uv')
+                : path_1.default.join(resourcesPath, 'uv', archDir, 'uv'),
+            uvx: electron_1.app.isPackaged
+                ? path_1.default.join(resourcesPath, 'resources', 'uv', archDir, 'uvx')
+                : path_1.default.join(resourcesPath, 'uv', archDir, 'uvx'),
         };
     }
     if (platform === 'win32') {
         return {
-            bun: path_1.default.join(resourcesPath, 'resources', 'bun', 'win-x64', 'bun.exe'),
-            uv: path_1.default.join(resourcesPath, 'resources', 'uv', 'win-x64', 'uv.exe'),
-            uvx: path_1.default.join(resourcesPath, 'resources', 'uv', 'win-x64', 'uvx.exe'),
+            bun: electron_1.app.isPackaged
+                ? path_1.default.join(resourcesPath, 'resources', 'bun', 'win-x64', 'bun.exe')
+                : path_1.default.join(resourcesPath, 'bun', 'win-x64', 'bun.exe'),
+            uv: electron_1.app.isPackaged
+                ? path_1.default.join(resourcesPath, 'resources', 'uv', 'win-x64', 'uv.exe')
+                : path_1.default.join(resourcesPath, 'uv', 'win-x64', 'uv.exe'),
+            uvx: electron_1.app.isPackaged
+                ? path_1.default.join(resourcesPath, 'resources', 'uv', 'win-x64', 'uvx.exe')
+                : path_1.default.join(resourcesPath, 'uv', 'win-x64', 'uvx.exe'),
         };
     }
     throw new Error(`Unsupported platform: ${platform}, arch: ${arch}`);

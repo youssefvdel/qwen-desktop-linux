@@ -50,9 +50,10 @@ function adaptConfig(configs) {
             });
         }
         // Set PATH environment with Linux standard paths + bundled bin
-        // In production, process.resourcesPath = /opt/Qwen Desktop/resources/
-        // Runtimes are at resources/resources/{bun,uv}/linux-x64/
-        const runtimeDir = path_1.default.join(electron_1.app.isPackaged ? process.resourcesPath : process.cwd(), "resources", "resources");
+        // In production, project resources are nested at resources/resources/ inside process.resourcesPath
+        const runtimeDir = electron_1.app.isPackaged
+            ? path_1.default.join(process.resourcesPath, "resources")
+            : path_1.default.join(process.cwd(), "resources");
         const bunDir = path_1.default.join(runtimeDir, "bun", process.arch === "arm64" ? "linux-arm64" : "linux-x64");
         const uvDir = path_1.default.join(runtimeDir, "uv", process.arch === "arm64" ? "linux-arm64" : "linux-x64");
         const PATH = [

@@ -1,4 +1,15 @@
 /**
+ * Shared TypeScript types — used across main, preload, and MCP modules
+ *
+ * Defines the shape of:
+ * - MCP configuration (McpServerConfig, McpConfig)
+ * - Tool definitions and call parameters (McpTool, ToolCallParams)
+ * - The Electron API exposed to the renderer (ElectronAPI)
+ * - Dialog options, file picker results, runtime paths
+ * - Event types for the main ↔ renderer event system
+ */
+
+/**
  * MCP Server Configuration
  * Matches the format used by the official Qwen desktop app
  */
@@ -10,7 +21,7 @@ export interface McpServerConfig {
   /** Environment variables */
   env?: Record<string, string>;
   /** Transport type for this server */
-  transportType?: 'stdio' | 'sse' | 'httpStream';
+  transportType?: "stdio" | "sse" | "httpStream";
   /** URL for SSE or HTTP transports */
   url?: string;
   /** Working directory for the command */
@@ -32,7 +43,7 @@ export interface McpTool {
   name: string;
   description?: string;
   inputSchema: {
-    type: 'object';
+    type: "object";
     properties?: Record<string, unknown>;
     required?: string[];
   };
@@ -61,8 +72,14 @@ export interface ElectronAPI {
   get_app_version: () => Promise<string>;
   get_platform_info: () => Promise<{ platform: string; arch: string }>;
   open_external_link: (url: string) => Promise<void>;
-  show_native_dialog: (options: { title?: string; message: string }) => Promise<void>;
-  request_file_access: (purpose: string, returnFile?: boolean) => Promise<{ filePath: string; file?: string }>;
+  show_native_dialog: (options: {
+    title?: string;
+    message: string;
+  }) => Promise<void>;
+  request_file_access: (
+    purpose: string,
+    returnFile?: boolean,
+  ) => Promise<{ filePath: string; file?: string }>;
 
   // === MCP Methods ===
   /** Connect to MCP servers (initializes all configured servers) */
@@ -79,7 +96,7 @@ export interface ElectronAPI {
   mcp_client_update_config: (config: McpConfig) => Promise<McpConfig>;
 
   // === Theme & Localization ===
-  switch_theme: (theme: 'light' | 'dark') => Promise<void>;
+  switch_theme: (theme: "light" | "dark") => Promise<void>;
   switch_ln: (language: string) => Promise<void>;
   update_title_bar_for_system_theme: (isDark: boolean) => Promise<void>;
 
@@ -94,7 +111,7 @@ export interface ElectronAPI {
 export interface DialogOptions {
   title?: string;
   message: string;
-  type?: 'info' | 'warning' | 'error';
+  type?: "info" | "warning" | "error";
   buttons?: string[];
   defaultId?: number;
 }
@@ -120,12 +137,12 @@ export interface RuntimePaths {
  * Event types for the event system
  */
 export enum AppEventType {
-  MCP_SERVER_ADDED = 'mcp_server_added',
-  MCP_SERVER_REMOVED = 'mcp_server_removed',
-  MCP_SERVER_ERROR = 'mcp_server_error',
-  MCP_TOOL_CALLED = 'mcp_tool_called',
-  THEME_CHANGED = 'theme_changed',
-  LANGUAGE_CHANGED = 'language_changed',
-  WINDOW_FOCUS = 'window_focus',
-  WEBVIEW_READY = 'webview_ready',
+  MCP_SERVER_ADDED = "mcp_server_added",
+  MCP_SERVER_REMOVED = "mcp_server_removed",
+  MCP_SERVER_ERROR = "mcp_server_error",
+  MCP_TOOL_CALLED = "mcp_tool_called",
+  THEME_CHANGED = "theme_changed",
+  LANGUAGE_CHANGED = "language_changed",
+  WINDOW_FOCUS = "window_focus",
+  WEBVIEW_READY = "webview_ready",
 }
