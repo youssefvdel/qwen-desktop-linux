@@ -46,8 +46,8 @@ modules:
     sources:
       - type: git
         url: https://github.com/youssefvdel/qwen-desktop-linux.git
-        tag: v1.0.0
-        commit: fd430c8
+        tag: v1.1.2
+        commit: d1c41a9
 
 cleanup:
   - /include

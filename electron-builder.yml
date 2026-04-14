@@ -7,10 +7,13 @@ linux:
     - AppImage
     - deb
     - rpm
-    - flatpak
   category: Utility
   icon: "resources/icon.png"
   artifactName: "${productName}-${version}-${arch}.${ext}"
+  protocols:
+    - name: "Qwen Desktop"
+      schemes:
+        - qwen
 
 files:
   - "out/**/*"
@@ -24,6 +27,16 @@ files:
   - "!tsconfig.json"
   - "!forge.config.ts"
   - "!scripts/**/*"
+  - "!flatpak/**/*"
+  - "!.github/**/*"
+  - "!workspace.termcanvas"
+  - "!test-electron.js"
+  - "!FINDINGS_TEMPLATE.md"
+  - "!KNOWN_ISSUES.md"
+  - "!QWEN_DESKTOP_FINDINGS.md"
+  - "!RESEARCH_AND_PLAN.md"
+  - "!WINDOWS_INVESTIGATION_GUIDE.md"
+  - "!.obsidian/**/*"
 
 extraResources:
   - from: "resources/bun"
