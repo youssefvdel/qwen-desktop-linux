@@ -294,6 +294,7 @@ zh-CN, en-US, zh-TW, ja-JP, ko-KR, ru-RU, de-DE, fr-FR, es-ES, it-IT, pt-PT, ar-
 | Auto-update not configured | Planned | Use package manager or download new release |
 | Wayland compositors | Partial | Add `--ozone-platform=wayland` flag |
 | AppImage needs FUSE | Distro-dependent | Install `libfuse2` or `fuse` |
+| Browser login redirect | Open | Login via the in-app window that appears when clicking login. If the external browser opens, copy the `qwen://open?token=xxx` URL from the browser address bar and run `xdg-open "qwen://open?token=YOUR_TOKEN"` in a terminal. This is a known limitation with AppImage protocol handlers on some desktop environments. |
 
 ---
 
