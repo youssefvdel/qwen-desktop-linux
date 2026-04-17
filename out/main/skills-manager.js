@@ -1,4 +1,17 @@
 "use strict";
+/**
+ * Skills Manager — system prompt injection for chat.qwen.ai
+ *
+ * Skills are .md/.txt files stored in ~/.config/qwen-desktop-linux/skills/.
+ * Each skill contains a system prompt that gets injected into the chat input
+ * when selected from the Skills menu.
+ *
+ * Key features:
+ * - injectSkill() injects via executeJavaScript with React nativeInputValueSetter
+ *   pattern, plus MutationObserver fallback for late-rendered inputs
+ * - buildSkillsMenuTemplate() returns menu items for pre-build inclusion
+ *   (avoids Electron's immutable post-build menu issue)
+ */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -41,12 +54,16 @@ exports.buildSkillsMenuTemplate = buildSkillsMenuTemplate;
 const electron_1 = require("electron");
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
+/** Directory where user skills are stored (platform-dependent via app.getPath) */
 const SKILLS_DIR = path.join(electron_1.app.getPath("userData"), "skills");
-/** Ordered selectors tried when locating the chat input element. */
+/**
+ * Ordered DOM selectors tried when locating the chat input element.
+ * Falls back through these in order until one matches.
+ */
 const INPUT_SELECTORS = [
     'textarea[data-id="chat-input"]',
-    'textarea[placeholder]',
-    'textarea',
+    "textarea[placeholder]",
+    "textarea",
     'div[contenteditable="true"]',
     '[data-testid="chat-input"]',
     'textarea[id*="chat"]',

@@ -1,3 +1,16 @@
+/**
+ * Skills Manager — system prompt injection for chat.qwen.ai
+ *
+ * Skills are .md/.txt files stored in ~/.config/qwen-desktop-linux/skills/.
+ * Each skill contains a system prompt that gets injected into the chat input
+ * when selected from the Skills menu.
+ *
+ * Key features:
+ * - injectSkill() injects via executeJavaScript with React nativeInputValueSetter
+ *   pattern, plus MutationObserver fallback for late-rendered inputs
+ * - buildSkillsMenuTemplate() returns menu items for pre-build inclusion
+ *   (avoids Electron's immutable post-build menu issue)
+ */
 import { MenuItemConstructorOptions } from "electron";
 /**
  * Ensure the skills directory exists, creating it and a sample skill if absent.

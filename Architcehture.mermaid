@@ -1,0 +1,6 @@
+graph LR
+    A[OpenCode] -->|1. Request| B[Local Bridge Script]
+    C[Qwen Desktop App] -.->|2. Steals Cookies| B
+    B -->|3. Direct API Call with Cookies| D[Qwen Cloud Servers]
+    D -->|4. Raw Response| B
+    B -->|5. Forwarded Response| A

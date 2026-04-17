@@ -1,4 +1,14 @@
 /**
+ * Shared TypeScript types — used across main, preload, and MCP modules
+ *
+ * Defines the shape of:
+ * - MCP configuration (McpServerConfig, McpConfig)
+ * - Tool definitions and call parameters (McpTool, ToolCallParams)
+ * - The Electron API exposed to the renderer (ElectronAPI)
+ * - Dialog options, file picker results, runtime paths
+ * - Event types for the main ↔ renderer event system
+ */
+/**
  * MCP Server Configuration
  * Matches the format used by the official Qwen desktop app
  */
@@ -10,7 +20,7 @@ export interface McpServerConfig {
     /** Environment variables */
     env?: Record<string, string>;
     /** Transport type for this server */
-    transportType?: 'stdio' | 'sse' | 'httpStream';
+    transportType?: "stdio" | "sse" | "httpStream";
     /** URL for SSE or HTTP transports */
     url?: string;
     /** Working directory for the command */
@@ -30,7 +40,7 @@ export interface McpTool {
     name: string;
     description?: string;
     inputSchema: {
-        type: 'object';
+        type: "object";
         properties?: Record<string, unknown>;
         required?: string[];
     };
@@ -80,7 +90,7 @@ export interface ElectronAPI {
     mcp_client_get_config: () => Promise<McpConfig>;
     /** Update MCP server configuration */
     mcp_client_update_config: (config: McpConfig) => Promise<McpConfig>;
-    switch_theme: (theme: 'light' | 'dark') => Promise<void>;
+    switch_theme: (theme: "light" | "dark") => Promise<void>;
     switch_ln: (language: string) => Promise<void>;
     update_title_bar_for_system_theme: (isDark: boolean) => Promise<void>;
     on_event: (type: string, callback: (payload: unknown) => void) => void;
@@ -95,7 +105,7 @@ export interface ElectronAPI {
 export interface DialogOptions {
     title?: string;
     message: string;
-    type?: 'info' | 'warning' | 'error';
+    type?: "info" | "warning" | "error";
     buttons?: string[];
     defaultId?: number;
 }

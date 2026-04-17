@@ -1,4 +1,14 @@
 "use strict";
+/**
+ * Shared TypeScript types — used across main, preload, and MCP modules
+ *
+ * Defines the shape of:
+ * - MCP configuration (McpServerConfig, McpConfig)
+ * - Tool definitions and call parameters (McpTool, ToolCallParams)
+ * - The Electron API exposed to the renderer (ElectronAPI)
+ * - Dialog options, file picker results, runtime paths
+ * - Event types for the main ↔ renderer event system
+ */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppEventType = void 0;
 /**

@@ -1,4 +1,19 @@
 "use strict";
+/**
+ * Runtime Manager — bundled bun + uv binary path resolution
+ *
+ * Downloads and manages the bundled runtimes (bun, uv, uvx) that MCP
+ * servers depend on. Handles platform-specific paths for Linux/macOS/Windows.
+ *
+ * Key functions:
+ * - getRuntimePaths() — Returns absolute paths to bun, uv, uvx binaries
+ * - ensureRuntimesExecutable() — chmod 0o755 on Linux/macOS (dev mode only)
+ * - getPlatformName()/getPlatformDir() — Platform detection helpers
+ *
+ * Note: electron-builder nests project resources/ inside process.resourcesPath,
+ * creating a double nesting (resources/resources/bun/...). This is handled
+ * by checking app.isPackaged and adjusting the path accordingly.
+ */
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -26,46 +41,46 @@ function getRuntimePaths() {
     // In development, fall back to project root
     const resourcesPath = electron_1.app.isPackaged
         ? process.resourcesPath
-        : path_1.default.join(electron_1.app.getAppPath(), 'resources');
-    if (platform === 'linux') {
-        const archDir = arch === 'arm64' ? 'linux-arm64' : 'linux-x64';
+        : path_1.default.join(electron_1.app.getAppPath(), "resources");
+    if (platform === "linux") {
+        const archDir = arch === "arm64" ? "linux-arm64" : "linux-x64";
         return {
             bun: electron_1.app.isPackaged
-                ? path_1.default.join(resourcesPath, 'resources', 'bun', archDir, 'bun')
-                : path_1.default.join(resourcesPath, 'bun', archDir, 'bun'),
+                ? path_1.default.join(resourcesPath, "resources", "bun", archDir, "bun")
+                : path_1.default.join(resourcesPath, "bun", archDir, "bun"),
             uv: electron_1.app.isPackaged
-                ? path_1.default.join(resourcesPath, 'resources', 'uv', archDir, 'uv')
-                : path_1.default.join(resourcesPath, 'uv', archDir, 'uv'),
+                ? path_1.default.join(resourcesPath, "resources", "uv", archDir, "uv")
+                : path_1.default.join(resourcesPath, "uv", archDir, "uv"),
             uvx: electron_1.app.isPackaged
-                ? path_1.default.join(resourcesPath, 'resources', 'uv', archDir, 'uvx')
-                : path_1.default.join(resourcesPath, 'uv', archDir, 'uvx'),
+                ? path_1.default.join(resourcesPath, "resources", "uv", archDir, "uvx")
+                : path_1.default.join(resourcesPath, "uv", archDir, "uvx"),
         };
     }
-    if (platform === 'darwin') {
-        const archDir = arch === 'arm64' ? 'darwin-arm64' : 'darwin-x64';
+    if (platform === "darwin") {
+        const archDir = arch === "arm64" ? "darwin-arm64" : "darwin-x64";
         return {
             bun: electron_1.app.isPackaged
-                ? path_1.default.join(resourcesPath, 'resources', 'bun', archDir, 'bun')
-                : path_1.default.join(resourcesPath, 'bun', archDir, 'bun'),
+                ? path_1.default.join(resourcesPath, "resources", "bun", archDir, "bun")
+                : path_1.default.join(resourcesPath, "bun", archDir, "bun"),
             uv: electron_1.app.isPackaged
-                ? path_1.default.join(resourcesPath, 'resources', 'uv', archDir, 'uv')
-                : path_1.default.join(resourcesPath, 'uv', archDir, 'uv'),
+                ? path_1.default.join(resourcesPath, "resources", "uv", archDir, "uv")
+                : path_1.default.join(resourcesPath, "uv", archDir, "uv"),
             uvx: electron_1.app.isPackaged
-                ? path_1.default.join(resourcesPath, 'resources', 'uv', archDir, 'uvx')
-                : path_1.default.join(resourcesPath, 'uv', archDir, 'uvx'),
+                ? path_1.default.join(resourcesPath, "resources", "uv", archDir, "uvx")
+                : path_1.default.join(resourcesPath, "uv", archDir, "uvx"),
         };
     }
-    if (platform === 'win32') {
+    if (platform === "win32") {
         return {
             bun: electron_1.app.isPackaged
-                ? path_1.default.join(resourcesPath, 'resources', 'bun', 'win-x64', 'bun.exe')
-                : path_1.default.join(resourcesPath, 'bun', 'win-x64', 'bun.exe'),
+                ? path_1.default.join(resourcesPath, "resources", "bun", "win-x64", "bun.exe")
+                : path_1.default.join(resourcesPath, "bun", "win-x64", "bun.exe"),
             uv: electron_1.app.isPackaged
-                ? path_1.default.join(resourcesPath, 'resources', 'uv', 'win-x64', 'uv.exe')
-                : path_1.default.join(resourcesPath, 'uv', 'win-x64', 'uv.exe'),
+                ? path_1.default.join(resourcesPath, "resources", "uv", "win-x64", "uv.exe")
+                : path_1.default.join(resourcesPath, "uv", "win-x64", "uv.exe"),
             uvx: electron_1.app.isPackaged
-                ? path_1.default.join(resourcesPath, 'resources', 'uv', 'win-x64', 'uvx.exe')
-                : path_1.default.join(resourcesPath, 'uv', 'win-x64', 'uvx.exe'),
+                ? path_1.default.join(resourcesPath, "resources", "uv", "win-x64", "uvx.exe")
+                : path_1.default.join(resourcesPath, "uv", "win-x64", "uvx.exe"),
         };
     }
     throw new Error(`Unsupported platform: ${platform}, arch: ${arch}`);
@@ -93,7 +108,8 @@ function getUvxPath() {
  */
 function checkRuntimeExists(runtimePath) {
     try {
-        return fs_1.default.existsSync(runtimePath) && fs_1.default.accessSync(runtimePath, fs_1.default.constants.X_OK) === undefined;
+        return (fs_1.default.existsSync(runtimePath) &&
+            fs_1.default.accessSync(runtimePath, fs_1.default.constants.X_OK) === undefined);
     }
     catch {
         return false;
@@ -103,13 +119,13 @@ function checkRuntimeExists(runtimePath) {
  * Ensure bundled runtimes are executable (Linux/macOS)
  */
 async function ensureRuntimesExecutable() {
-    if (process.platform === 'win32')
+    if (process.platform === "win32")
         return;
     // Skip chmod on packaged apps — files are already executable from the RPM
     if (electron_1.app.isPackaged)
         return;
     const runtimes = getRuntimePaths();
-    const chmod = require('fs').promises.chmod;
+    const chmod = require("fs").promises.chmod;
     for (const runtimePath of Object.values(runtimes)) {
         try {
             if (fs_1.default.existsSync(runtimePath)) {
@@ -128,11 +144,11 @@ async function ensureRuntimesExecutable() {
 function getPlatformName() {
     const platform = process.platform;
     const arch = process.arch;
-    if (platform === 'linux')
+    if (platform === "linux")
         return `Linux ${arch}`;
-    if (platform === 'darwin')
+    if (platform === "darwin")
         return `macOS ${arch}`;
-    if (platform === 'win32')
+    if (platform === "win32")
         return `Windows ${arch}`;
     return `${platform} ${arch}`;
 }
@@ -140,12 +156,12 @@ function getPlatformName() {
  * Get platform directory name (for auto-updater, etc.)
  */
 function getPlatformDir(platform = process.platform, arch = process.arch) {
-    if (platform === 'darwin')
-        return arch === 'arm64' ? 'mac-arm64' : 'mac-x64';
-    if (platform === 'win32')
-        return 'win-x64';
-    if (platform === 'linux')
-        return arch === 'arm64' ? 'linux-arm64' : 'linux-x64';
+    if (platform === "darwin")
+        return arch === "arm64" ? "mac-arm64" : "mac-x64";
+    if (platform === "win32")
+        return "win-x64";
+    if (platform === "linux")
+        return arch === "arm64" ? "linux-arm64" : "linux-x64";
     throw new Error(`Unsupported platform: ${platform}, arch: ${arch}`);
 }
 //# sourceMappingURL=runtime.js.map

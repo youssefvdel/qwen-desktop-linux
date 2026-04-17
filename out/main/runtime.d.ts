@@ -1,4 +1,19 @@
-import type { RuntimePaths } from '../shared/types.js';
+/**
+ * Runtime Manager — bundled bun + uv binary path resolution
+ *
+ * Downloads and manages the bundled runtimes (bun, uv, uvx) that MCP
+ * servers depend on. Handles platform-specific paths for Linux/macOS/Windows.
+ *
+ * Key functions:
+ * - getRuntimePaths() — Returns absolute paths to bun, uv, uvx binaries
+ * - ensureRuntimesExecutable() — chmod 0o755 on Linux/macOS (dev mode only)
+ * - getPlatformName()/getPlatformDir() — Platform detection helpers
+ *
+ * Note: electron-builder nests project resources/ inside process.resourcesPath,
+ * creating a double nesting (resources/resources/bun/...). This is handled
+ * by checking app.isPackaged and adjusting the path accordingly.
+ */
+import type { RuntimePaths } from "../shared/types.js";
 /**
  * Get platform-specific paths for bundled runtimes
  * Supports Linux (x64/arm64), macOS, and Windows

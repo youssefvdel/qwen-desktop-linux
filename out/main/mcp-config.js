@@ -1,4 +1,16 @@
 "use strict";
+/**
+ * MCP Config Adapter — rewrites MCP server configs to use bundled runtimes
+ *
+ * The official Qwen Desktop app uses `adaptConfig()` to replace command names
+ * (npx, bun, uvx) with actual bundled binary paths. This module replicates
+ * that behavior for Linux:
+ * - Replaces `npx` → bundled `bun` path
+ * - Replaces `bun` → bundled `bun` path
+ * - Replaces `uvx` → bundled `uvx` path
+ * - Fixes macOS paths (/Users) to Linux home directory
+ * - Sets PATH environment with bundled runtime directories
+ */
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -24,7 +36,8 @@ function adaptConfig(configs) {
         // Replace any path ending with /bun (from any source) with the bundled one
         if (cmd.endsWith("/bun") || cmd === "bun" || cmd === "npx") {
             cmd = correctBunPath;
-            if (config.command === "npx" || (!config.command.endsWith("/bun") && config.command !== correctBunPath)) {
+            if (config.command === "npx" ||
+                (!config.command.endsWith("/bun") && config.command !== correctBunPath)) {
                 config.args = config.args || [];
                 if (!config.args.includes("-y")) {
                     config.args.unshift("-y");

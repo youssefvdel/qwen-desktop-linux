@@ -1,4 +1,17 @@
 "use strict";
+/**
+ * MCP Server Client — single-server connection wrapper
+ *
+ * Wraps @modelcontextprotocol/sdk's Client for a single MCP server.
+ * Handles connection lifecycle (connect/disconnect), tool listing, and tool calls.
+ *
+ * Supports three transport types:
+ * - stdio: Local process (default) — connected via spawn, cached after first connect
+ * - sse: Server-Sent Events — stateless, connects on each call
+ * - httpStream: HTTP streaming — stateless, connects on each call
+ *
+ * Tools are cached after first listTools() call to avoid redundant API requests.
+ */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.McpServerClient = void 0;
 const index_js_1 = require("@modelcontextprotocol/sdk/client/index.js");

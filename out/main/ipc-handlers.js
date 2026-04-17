@@ -1,4 +1,16 @@
 "use strict";
+/**
+ * IPC Handlers — all ipcMain handlers for renderer ↔ main communication
+ *
+ * Registered via registerIpcHandlers(). Uses dependency injection (IpcHandlerDeps)
+ * so this module has no direct references to global state.
+ *
+ * Handler categories:
+ * - App Management: version, platform, devtools, dialogs, file picker
+ * - MCP: connect/close/listTools/callTool/getConfig/updateConfig
+ * - Theme & Localization: switch theme, switch language, system theme sync
+ * - Event Forwarding: renderer → main → renderer event relay
+ */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -36,6 +48,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.MCP_CONFIG_KEY = void 0;
 exports.registerIpcHandlers = registerIpcHandlers;
 const electron_1 = require("electron");
+/** Settings key for MCP config in electron-settings */
 exports.MCP_CONFIG_KEY = "mcp_config";
 /**
  * Register all IPC main handlers.
@@ -85,7 +98,9 @@ function registerIpcHandlers(deps) {
         if (!filePaths || filePaths.length === 0) {
             return { filePath: "" };
         }
-        const result = { filePath: filePaths[0] };
+        const result = {
+            filePath: filePaths[0],
+        };
         if (returnFile) {
             const fs = await Promise.resolve().then(() => __importStar(require("fs")));
             result.file = await fs.promises.readFile(filePaths[0], "utf-8");

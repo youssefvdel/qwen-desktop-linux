@@ -1,3 +1,18 @@
+/**
+ * MCP Proxy — multi-server connection manager
+ *
+ * Manages connections to multiple MCP (Model Context Protocol) servers.
+ * Provides a unified API for listing tools and calling tools across servers.
+ *
+ * Key features:
+ * - Lazy connection: servers are connected on-demand via getClient()
+ * - Client caching: stdio clients are cached and reused; HTTP/SSE are stateless
+ * - HTTP proxy endpoints: /listTools and /callTool for external access (unused)
+ * - Express app exposed via getApp() for custom routing
+ *
+ * Replaces the official app's @ali/spark-mcp with an open-source implementation
+ * built on @modelcontextprotocol/sdk.
+ */
 import express from "express";
 import type { McpConfig, ToolCallParams } from "../shared/types.js";
 /**

@@ -32,6 +32,8 @@ import {
 import { setupAutoUpdater } from "./updater.js";
 import { createWindow } from "./window-manager.js";
 import { registerIpcHandlers, MCP_CONFIG_KEY } from "./ipc-handlers.js";
+import { qwenProxy } from "./qwen-proxy.js";
+import { logger } from "./logger.js";
 import {
   configureApp,
   setupProtocolHandler,
@@ -90,7 +92,7 @@ function getAppIcon(): Electron.NativeImage | undefined {
   for (const p of iconPaths) {
     try {
       if (fs.existsSync(p)) return nativeImage.createFromPath(p);
-    } catch {}
+    } catch { }
   }
   return undefined;
 }
@@ -288,9 +290,7 @@ async function setupMenu(): Promise<void> {
 configureApp();
 
 app.whenReady().then(async () => {
-  console.log("[App] Starting Qwen Desktop for Linux");
-  console.log("[App] Platform:", getPlatformName());
-  console.log("[App] Version:", APP_VERSION);
+  logger.info('🚀 Starting Qwen Desktop for Linux', { platform: getPlatformName(), version: APP_VERSION });
 
   try {
     // Make bundled runtimes executable (dev mode only)
@@ -342,6 +342,78 @@ app.whenReady().then(async () => {
       onDeepLink: (url) => handleDeepLink(url, mainWindow),
     });
 
+    // === Start Qwen Web API Proxy (Direct HTTP Bridge) ===
+    // Exposes OpenAI-compatible endpoint at http://localhost:11435
+    logger.info('🔗 Initializing QwenProxy...');
+    qwenProxy.setWindow(mainWindow);
+    qwenProxy.start();
+    // ======================================================
+
+    // === Force DevTools Open (for API discovery) ===
+    // Auto-open detached DevTools so we can inspect network traffic
+    setTimeout(() => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.openDevTools({ mode: 'detach' });
+        logger.info('🔍 DevTools auto-opened in detached mode for API inspection');
+      }
+    }, 3000);
+    // =============================================
+
+    // === Aggressive Network Interceptor for API Discovery ===
+    const ses = mainWindow.webContents.session;
+
+    // Log ALL requests to chat.qwen.ai (XHR/fetch only)
+    // Note: Electron uses 'xhr' for both XHR and fetch requests
+    ses.webRequest.onBeforeRequest({ urls: ['*://chat.qwen.ai/*'] }, (details, callback) => {
+      if (details.resourceType === 'xhr') {
+        logger.info('🌐 [API-TRACE] ' + details.method + ' ' + details.url, {
+          resourceType: details.resourceType,
+          requestId: details.id,
+          timestamp: new Date().toISOString()
+        });
+        // Log POST body if present
+        if (details.uploadData) {
+          const body = details.uploadData.map((d: any) =>
+            d.bytes ? Buffer.from(d.bytes).toString('utf8') : d.text
+          ).join('');
+          if (body) logger.debug('📦 [API-BODY] ' + body.substring(0, 500));
+        }
+      }
+      callback({});
+    });
+
+    // Log headers for API-like requests
+    ses.webRequest.onSendHeaders({ urls: ['*://chat.qwen.ai/*'] }, (details) => {
+      if (details.resourceType === 'xhr' &&
+        (details.url.includes('/api') || details.url.includes('/gpts') || details.url.includes('/chat'))) {
+        logger.info('🔑 [API-HEADERS] ' + details.url, {
+          method: details.method,
+          headers: Object.fromEntries(
+            Object.entries(details.requestHeaders).filter(([k]) =>
+              !['cookie', 'authorization'].includes(k.toLowerCase())
+            )
+          )
+        });
+      }
+    });
+
+    // Log responses
+    ses.webRequest.onCompleted({ urls: ['*://chat.qwen.ai/*'] }, (details) => {
+      if (details.resourceType === 'xhr' &&
+        (details.url.includes('/api') || details.url.includes('/gpts') || details.url.includes('/chat'))) {
+        logger.info('✅ [API-RESPONSE] ' + details.statusCode + ' ' + details.url, {
+          status: details.statusCode,
+          method: details.method,
+          size: details.responseHeaders?.['content-length']?.[0] || 'unknown'
+        });
+        // If error status, log more
+        if (details.statusCode >= 400) {
+          logger.warn('❌ [API-ERROR] ' + details.url + ' -> ' + details.statusCode);
+        }
+      }
+    });
+    // =============================================
+
     // Build menu after window creation (so skills menu can populate)
     await setupMenu();
 
@@ -388,7 +460,7 @@ app.on("window-all-closed", () => {
 
 // Before quit: disconnect all MCP servers
 app.on("before-quit", () => {
-  mcpServer.disconnectAll().catch(() => {});
+  mcpServer.disconnectAll().catch(() => { });
 });
 
 // Global error handlers

@@ -1,4 +1,17 @@
 "use strict";
+/**
+ * App Lifecycle — protocol handler, deep links, quit state, app flags
+ *
+ * Responsibilities:
+ * - configureApp() — Sets all app.commandLine flags (GPU, sandbox, platform hints).
+ *   Called BEFORE app.whenReady() so flags take effect.
+ * - setupProtocolHandler() — Registers qwen:// as a custom protocol handler.
+ *   On Linux AppImage, patches the auto-generated .desktop file to add the MIME type.
+ * - handleDeepLink() — Parses qwen://open?token=xxx URLs and sends the auth token
+ *   to the renderer via IPC event.
+ * - isQuitting/setQuitting — Global quit state used by window-manager for
+ *   close-to-tray behavior vs actual quit.
+ */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -43,14 +56,17 @@ const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 const os = __importStar(require("os"));
 const child_process_1 = require("child_process");
-// Local HTTP server for OAuth callback fallback
+// Local HTTP server for OAuth callback fallback (unused, kept for future)
 let authCallbackServer = null;
 const AUTH_CALLBACK_PORT = 14920;
 // === Quit State ===
+/** Tracks whether the app is intentionally quitting (tray Quit) vs hiding to tray. */
 let _isQuitting = false;
+/** Check if app is in quit state. Used by window-manager close handler. */
 function isQuitting() {
     return _isQuitting;
 }
+/** Set the quit state. Called from tray "Quit" menu item. */
 function setQuitting(value) {
     _isQuitting = value;
 }
@@ -71,8 +87,9 @@ function registerAppImageProtocolHandler() {
     function tryRegister() {
         try {
             const files = fs.readdirSync(desktopDir);
-            console.log("[Protocol] Found desktop files:", files.filter(f => f.toLowerCase().includes("qwen")));
-            const appimageDesktop = files.find(f => f.toLowerCase().includes("qwen") || f.toLowerCase().includes("qwen-desktop"));
+            console.log("[Protocol] Found desktop files:", files.filter((f) => f.toLowerCase().includes("qwen")));
+            const appimageDesktop = files.find((f) => f.toLowerCase().includes("qwen") ||
+                f.toLowerCase().includes("qwen-desktop"));
             if (!appimageDesktop) {
                 console.log("[Protocol] No .desktop file found yet");
                 return false;
@@ -93,11 +110,17 @@ function registerAppImageProtocolHandler() {
             }
             fs.writeFileSync(desktopFile, content);
             console.log("[Protocol] Patched:", desktopFile);
-            (0, child_process_1.execSync)(`xdg-mime default ${appimageDesktop} x-scheme-handler/qwen`, { stdio: "pipe" });
+            (0, child_process_1.execSync)(`xdg-mime default ${appimageDesktop} x-scheme-handler/qwen`, {
+                stdio: "pipe",
+            });
             console.log("[Protocol] xdg-mime registered");
             (0, child_process_1.execSync)(`update-desktop-database ${desktopDir}`, { stdio: "pipe" });
             console.log("[Protocol] Desktop database updated");
-            const handler = (0, child_process_1.execSync)(`xdg-mime query default x-scheme-handler/qwen`, { stdio: "pipe" }).toString().trim();
+            const handler = (0, child_process_1.execSync)(`xdg-mime query default x-scheme-handler/qwen`, {
+                stdio: "pipe",
+            })
+                .toString()
+                .trim();
             console.log("[Protocol] Verified handler:", handler);
             return true;
         }
@@ -172,7 +195,9 @@ function setupProtocolHandler(handlers) {
     // THEN: Set as default protocol client (uses the .desktop file)
     if (process.defaultApp) {
         if (process.argv.length >= 2) {
-            electron_1.app.setAsDefaultProtocolClient("qwen", process.execPath, [process.argv[1]]);
+            electron_1.app.setAsDefaultProtocolClient("qwen", process.execPath, [
+                process.argv[1],
+            ]);
         }
     }
     else {

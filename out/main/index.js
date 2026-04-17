@@ -25,6 +25,8 @@ const runtime_js_1 = require("./runtime.js");
 const updater_js_1 = require("./updater.js");
 const window_manager_js_1 = require("./window-manager.js");
 const ipc_handlers_js_1 = require("./ipc-handlers.js");
+const qwen_proxy_js_1 = require("./qwen-proxy.js");
+const logger_js_1 = require("./logger.js");
 const app_lifecycle_js_1 = require("./app-lifecycle.js");
 const skills_manager_js_1 = require("./skills-manager.js");
 // === Constants ===
@@ -256,9 +258,7 @@ async function setupMenu() {
 // Configure app flags BEFORE ready (GPU, sandbox, platform hints)
 (0, app_lifecycle_js_1.configureApp)();
 electron_1.app.whenReady().then(async () => {
-    console.log("[App] Starting Qwen Desktop for Linux");
-    console.log("[App] Platform:", (0, runtime_js_1.getPlatformName)());
-    console.log("[App] Version:", APP_VERSION);
+    logger_js_1.logger.info('🚀 Starting Qwen Desktop for Linux', { platform: (0, runtime_js_1.getPlatformName)(), version: APP_VERSION });
     try {
         // Make bundled runtimes executable (dev mode only)
         await (0, runtime_js_1.ensureRuntimesExecutable)();
@@ -305,6 +305,67 @@ electron_1.app.whenReady().then(async () => {
             isQuitting: app_lifecycle_js_1.isQuitting,
             onDeepLink: (url) => (0, app_lifecycle_js_1.handleDeepLink)(url, mainWindow),
         });
+        // === Start Qwen Web API Proxy (Direct HTTP Bridge) ===
+        // Exposes OpenAI-compatible endpoint at http://localhost:11435
+        logger_js_1.logger.info('🔗 Initializing QwenProxy...');
+        qwen_proxy_js_1.qwenProxy.setWindow(mainWindow);
+        qwen_proxy_js_1.qwenProxy.start();
+        // ======================================================
+        // === Force DevTools Open (for API discovery) ===
+        // Auto-open detached DevTools so we can inspect network traffic
+        setTimeout(() => {
+            if (mainWindow && !mainWindow.isDestroyed()) {
+                mainWindow.webContents.openDevTools({ mode: 'detach' });
+                logger_js_1.logger.info('🔍 DevTools auto-opened in detached mode for API inspection');
+            }
+        }, 3000);
+        // =============================================
+        // === Aggressive Network Interceptor for API Discovery ===
+        const ses = mainWindow.webContents.session;
+        // Log ALL requests to chat.qwen.ai (XHR/fetch only)
+        // Note: Electron uses 'xhr' for both XHR and fetch requests
+        ses.webRequest.onBeforeRequest({ urls: ['*://chat.qwen.ai/*'] }, (details, callback) => {
+            if (details.resourceType === 'xhr') {
+                logger_js_1.logger.info('🌐 [API-TRACE] ' + details.method + ' ' + details.url, {
+                    resourceType: details.resourceType,
+                    requestId: details.id,
+                    timestamp: new Date().toISOString()
+                });
+                // Log POST body if present
+                if (details.uploadData) {
+                    const body = details.uploadData.map((d) => d.bytes ? Buffer.from(d.bytes).toString('utf8') : d.text).join('');
+                    if (body)
+                        logger_js_1.logger.debug('📦 [API-BODY] ' + body.substring(0, 500));
+                }
+            }
+            callback({});
+        });
+        // Log headers for API-like requests
+        ses.webRequest.onSendHeaders({ urls: ['*://chat.qwen.ai/*'] }, (details) => {
+            if (details.resourceType === 'xhr' &&
+                (details.url.includes('/api') || details.url.includes('/gpts') || details.url.includes('/chat'))) {
+                logger_js_1.logger.info('🔑 [API-HEADERS] ' + details.url, {
+                    method: details.method,
+                    headers: Object.fromEntries(Object.entries(details.requestHeaders).filter(([k]) => !['cookie', 'authorization'].includes(k.toLowerCase())))
+                });
+            }
+        });
+        // Log responses
+        ses.webRequest.onCompleted({ urls: ['*://chat.qwen.ai/*'] }, (details) => {
+            if (details.resourceType === 'xhr' &&
+                (details.url.includes('/api') || details.url.includes('/gpts') || details.url.includes('/chat'))) {
+                logger_js_1.logger.info('✅ [API-RESPONSE] ' + details.statusCode + ' ' + details.url, {
+                    status: details.statusCode,
+                    method: details.method,
+                    size: details.responseHeaders?.['content-length']?.[0] || 'unknown'
+                });
+                // If error status, log more
+                if (details.statusCode >= 400) {
+                    logger_js_1.logger.warn('❌ [API-ERROR] ' + details.url + ' -> ' + details.statusCode);
+                }
+            }
+        });
+        // =============================================
         // Build menu after window creation (so skills menu can populate)
         await setupMenu();
         console.log("[App] ✅ Window created successfully");
