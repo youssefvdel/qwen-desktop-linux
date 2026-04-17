@@ -18,6 +18,9 @@ import type { McpConfig, DialogOptions } from "../shared/types.js";
 /** Settings key for MCP config in electron-settings */
 export const MCP_CONFIG_KEY = "mcp_config";
 
+/** Settings key for HTTP server config */
+export const HTTP_SERVER_CONFIG_KEY = "http_server_config";
+
 /**
  * Dependencies injected from index.ts. This module has no direct access to
  * global state — everything comes through this interface.
@@ -30,6 +33,13 @@ export interface IpcHandlerDeps {
   loadMcpConfig: () => Promise<McpConfig>;
   getDefaultMcpConfig: () => McpConfig;
   APP_VERSION: string;
+}
+
+/** HTTP Server configuration for CLI access */
+interface HttpServerConfig {
+  enabled: boolean;
+  port: number;
+  authToken?: string;
 }
 
 /**
@@ -196,6 +206,67 @@ export function registerIpcHandlers(deps: IpcHandlerDeps): void {
       } catch (error) {
         console.error("[IPC] mcpClientUpdateConfig error:", error);
         throw error;
+      }
+    },
+  );
+
+  // === HTTP Server for CLI Access ===
+
+  ipcMain.handle(
+    "http_server_start",
+    async (_event, config?: Partial<HttpServerConfig>): Promise<{ port: number; enabled: boolean }> => {
+      try {
+        const currentPort = deps.mcpServer.getHTTPPort?.() || 3000;
+        const port = config?.port ?? currentPort;
+        
+        deps.mcpServer.startHTTP(port);
+        
+        // Save config
+        const serverConfig: HttpServerConfig = {
+          enabled: true,
+          port,
+          authToken: config?.authToken,
+        };
+        await deps.settings.set(HTTP_SERVER_CONFIG_KEY, serverConfig as any);
+        
+        console.log(`[IPC] HTTP server started on port ${port}`);
+        return { port, enabled: true };
+      } catch (error) {
+        console.error("[IPC] http_server_start error:", error);
+        throw error;
+      }
+    },
+  );
+
+  ipcMain.handle(
+    "http_server_stop",
+    async (): Promise<{ enabled: boolean }> => {
+      try {
+        deps.mcpServer.stopHTTP?.();
+        await deps.settings.set(HTTP_SERVER_CONFIG_KEY, { enabled: false } as any);
+        console.log("[IPC] HTTP server stopped");
+        return { enabled: false };
+      } catch (error) {
+        console.error("[IPC] http_server_stop error:", error);
+        throw error;
+      }
+    },
+  );
+
+  ipcMain.handle(
+    "http_server_get_status",
+    async (): Promise<{ enabled: boolean; port?: number; url?: string }> => {
+      try {
+        const enabled = deps.mcpServer.isHTTPEnabled?.() ?? false;
+        const port = deps.mcpServer.getHTTPPort?.();
+        return {
+          enabled,
+          port: enabled ? port : undefined,
+          url: enabled ? `http://localhost:${port}` : undefined,
+        };
+      } catch (error) {
+        console.error("[IPC] http_server_get_status error:", error);
+        return { enabled: false };
       }
     },
   );

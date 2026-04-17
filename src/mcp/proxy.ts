@@ -20,6 +20,13 @@ import type http from "http";
 import { McpServerClient } from "./server-client.js";
 import type { McpConfig, ToolCallParams } from "../shared/types.js";
 
+/** HTTP Server configuration */
+export interface HttpServerConfig {
+  port: number;
+  enabled: boolean;
+  authToken?: string; // Optional Bearer token for authentication
+}
+
 /**
  * MCP Proxy Server
  * Manages multiple MCP server connections and provides HTTP + programmatic API
@@ -31,15 +38,30 @@ class McpProxy {
   private mcpServers: McpConfig = {};
   private clients: Map<string, McpServerClient> = new Map();
   private httpPort: number = 3000;
+  private httpEnabled: boolean = false;
+  private authToken?: string;
 
-  constructor() {
+  constructor(httpConfig?: Partial<HttpServerConfig>) {
     this.app = express();
     this.app.use(cors());
     this.app.use(express.json());
 
+    // HTTP server configuration
+    if (httpConfig) {
+      this.httpPort = httpConfig.port ?? 3000;
+      this.httpEnabled = httpConfig.enabled ?? false;
+      this.authToken = httpConfig.authToken;
+    }
+
     // HTTP endpoints for proxy access (same as official app)
     this.app.get("/listTools", this.listToolsByHTTP.bind(this));
     this.app.post("/callTool", this.callToolByHTTP.bind(this));
+    
+    // New CLI API endpoints
+    this.app.get("/api/config", this.getConfig.bind(this));
+    this.app.post("/api/chat", this.chatHandler.bind(this));
+    this.app.get("/api/tools", this.getAllTools.bind(this));
+    this.app.post("/api/tools/call", this.callToolAPI.bind(this));
   }
 
   /**
@@ -172,10 +194,13 @@ class McpProxy {
   /**
    * Start HTTP server for MCP proxy access
    */
-  startHTTP(port: number = 3000): void {
-    this.httpPort = port;
-    this.httpServer = this.app.listen(port, () => {
-      console.log(`[MCP] HTTP server started on port ${port}`);
+  startHTTP(port?: number): void {
+    if (port !== undefined) {
+      this.httpPort = port;
+    }
+    this.httpEnabled = true;
+    this.httpServer = this.app.listen(this.httpPort, () => {
+      console.log(`[MCP] HTTP server started on port ${this.httpPort}`);
     });
   }
 
@@ -186,8 +211,48 @@ class McpProxy {
     if (this.httpServer) {
       this.httpServer.close();
       this.httpServer = null;
+      this.httpEnabled = false;
       console.log("[MCP] HTTP server stopped");
     }
+  }
+
+  /**
+   * Check if HTTP server is running
+   */
+  isHTTPEnabled(): boolean {
+    return this.httpEnabled;
+  }
+
+  /**
+   * Get HTTP server port
+   */
+  getHTTPPort(): number {
+    return this.httpPort;
+  }
+
+  /**
+   * Authentication middleware for CLI API endpoints
+   */
+  private authenticate(req: express.Request, res: express.Response, next: express.NextFunction): void {
+    if (!this.authToken) {
+      // No auth required
+      next();
+      return;
+    }
+
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      res.status(401).json({ error: 'Authorization header required' });
+      return;
+    }
+
+    const token = authHeader.substring(7);
+    if (token !== this.authToken) {
+      res.status(403).json({ error: 'Invalid token' });
+      return;
+    }
+
+    next();
   }
 
   /**
@@ -239,6 +304,138 @@ class McpProxy {
       res.json(result);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
+    }
+  }
+
+  /**
+   * GET /api/config - Get MCP server configuration
+   * Returns the current MCP server configs for CLI tools
+   */
+  private async getConfig(
+    req: express.Request,
+    res: express.Response,
+  ): Promise<void> {
+    try {
+      const config = this.getMCPServers();
+      res.json({
+        success: true,
+        config,
+        port: this.httpPort,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/chat - Send a message to Qwen Chat
+   * This is a placeholder - actual chat implementation would require
+   * reverse-engineering the Qwen web API or using MCP tools
+   */
+  private async chatHandler(
+    req: express.Request,
+    res: express.Response,
+  ): Promise<void> {
+    try {
+      const { message, conversationId } = req.body;
+      
+      if (!message) {
+        res.status(400).json({ error: "Message is required" });
+        return;
+      }
+
+      // Note: Direct chat API requires reverse-engineering Qwen's web protocol
+      // For now, we recommend using MCP tools to interact with external systems
+      // The official app doesn't expose a direct chat API
+      
+      res.json({
+        success: false,
+        error: "Direct chat API not available. Use MCP tools instead.",
+        suggestion: "Use /api/tools to list available tools and /api/tools/call to invoke them",
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  /**
+   * GET /api/tools - List all available MCP tools from all servers
+   * Returns a flat list of tools with server information
+   */
+  private async getAllTools(
+    req: express.Request,
+    res: express.Response,
+  ): Promise<void> {
+    try {
+      const config = this.getMCPServers();
+      const allTools: Array<{
+        serverName: string;
+        tools: Array<{
+          name: string;
+          description?: string;
+          inputSchema: any;
+        }>;
+      }> = [];
+
+      for (const serverName of Object.keys(config)) {
+        try {
+          const result = await this.listTools({ serverName });
+          allTools.push({
+            serverName,
+            tools: result.tools || [],
+          });
+        } catch (error: any) {
+          console.error(`Failed to list tools for server "${serverName}":`, error.message);
+          // Continue with other servers
+        }
+      }
+
+      res.json({
+        success: true,
+        servers: Object.keys(config),
+        tools: allTools,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/tools/call - Call an MCP tool (CLI-friendly endpoint)
+   * Body: { serverName, toolName, arguments? }
+   */
+  private async callToolAPI(
+    req: express.Request,
+    res: express.Response,
+  ): Promise<void> {
+    try {
+      const { serverName, toolName, arguments: toolArgs } = req.body;
+      
+      if (!serverName || !toolName) {
+        res.status(400).json({ 
+          error: "Missing serverName or toolName",
+          example: { serverName: "Filesystem", toolName: "read_file", arguments: { path: "/path/to/file" } }
+        });
+        return;
+      }
+
+      const params: ToolCallParams = {
+        serverName,
+        toolName,
+        toolArguments: toolArgs,
+      };
+
+      const result = await this.callTool(params);
+      
+      res.json({
+        success: true,
+        result,
+      });
+    } catch (error: any) {
+      res.status(500).json({ 
+        error: error.message,
+        success: false,
+      });
     }
   }
 

@@ -95,6 +95,14 @@ export interface ElectronAPI {
   /** Update MCP server configuration */
   mcp_client_update_config: (config: McpConfig) => Promise<McpConfig>;
 
+  // === HTTP Server for CLI Access ===
+  /** Start HTTP server for CLI access */
+  http_server_start: (config?: { port?: number; authToken?: string }) => Promise<{ port: number; enabled: boolean }>;
+  /** Stop HTTP server */
+  http_server_stop: () => Promise<{ enabled: boolean }>;
+  /** Get HTTP server status */
+  http_server_get_status: () => Promise<{ enabled: boolean; port?: number; url?: string }>;
+
   // === Theme & Localization ===
   switch_theme: (theme: "light" | "dark") => Promise<void>;
   switch_ln: (language: string) => Promise<void>;

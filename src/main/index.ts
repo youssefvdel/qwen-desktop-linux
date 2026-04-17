@@ -333,6 +333,27 @@ app.whenReady().then(async () => {
       setupAutoUpdater();
     }
 
+    // Start HTTP server for CLI access by default (can be disabled in settings)
+    try {
+      const httpServerConfig = await settings.get("http_server_config");
+      if (httpServerConfig && (httpServerConfig as any).enabled === false) {
+        console.log("[App] HTTP server disabled in settings, not starting");
+      } else {
+        const config = (httpServerConfig || {}) as { port?: number; authToken?: string };
+        const port = config.port || 3000;
+        mcpServer.startHTTP(port);
+        console.log(`[App] ✅ HTTP server started on port ${port} for CLI access`);
+        console.log(`[App] 📡 API endpoints:`);
+        console.log(`[App]    - GET  http://localhost:${port}/api/tools (list all MCP tools)`);
+        console.log(`[App]    - POST http://localhost:${port}/api/tools/call (call a tool)`);
+        console.log(`[App]    - GET  http://localhost:${port}/api/config (get MCP config)`);
+      }
+    } catch (error) {
+      console.log("[App] Starting HTTP server with default config (port 3000)");
+      mcpServer.startHTTP(3000);
+      console.log("[App] ✅ HTTP server started on port 3000 for CLI access");
+    }
+
     // Create main window (loads chat.qwen.ai with MCP bridge)
     mainWindow = createWindow({
       onMcpClientConnect: mcpClientConnect,

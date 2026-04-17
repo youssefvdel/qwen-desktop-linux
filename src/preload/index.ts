@@ -75,6 +75,12 @@ const electronAPI: ElectronAPI = {
   mcp_client_update_config: (config: McpConfig) =>
     ipcRenderer.invoke("mcp_client_update_config", config),
 
+  // === HTTP Server for CLI Access ===
+  http_server_start: (config?: { port?: number; authToken?: string }) =>
+    ipcRenderer.invoke("http_server_start", config),
+  http_server_stop: () => ipcRenderer.invoke("http_server_stop"),
+  http_server_get_status: () => ipcRenderer.invoke("http_server_get_status"),
+
   // === Theme & Localization ===
   switch_theme: (theme: "light" | "dark") =>
     ipcRenderer.invoke("switch_theme", theme),
