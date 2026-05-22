@@ -113,7 +113,7 @@ function createWindow(deps) {
             webSecurity: true,
             allowRunningInsecureContent: false,
         },
-        autoHideMenuBar: false,
+        autoHideMenuBar: true,
     });
     console.log("[Window] ✅ BrowserWindow created");
     // Show window when ready (with 5s timeout fallback)

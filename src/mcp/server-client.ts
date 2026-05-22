@@ -103,13 +103,13 @@ class McpServerClient {
     }
 
     const response = await this.client!.listTools();
-    this.tools = response.tools.map((tool) => ({
+    this.tools = response.tools.map((tool: { name: string; description?: string; inputSchema: unknown }) => ({
       name: tool.name,
       description: tool.description,
       inputSchema: tool.inputSchema as McpTool["inputSchema"],
     }));
 
-    return { tools: this.tools };
+    return { tools: this.tools! };
   }
 
   /**

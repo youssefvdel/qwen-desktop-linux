@@ -1,7 +1,7 @@
 /**
  * MCP Config Adapter — rewrites MCP server configs to use bundled runtimes
  *
- * The official Qwen Desktop app uses `adaptConfig()` to replace command names
+ * Qwen Studio uses `adaptConfig()` to replace command names
  * (npx, bun, uvx) with actual bundled binary paths. This module replicates
  * that behavior for Linux:
  * - Replaces `npx` → bundled `bun` path

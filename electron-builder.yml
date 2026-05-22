@@ -11,7 +11,7 @@ linux:
   icon: "resources/icon.png"
   artifactName: "${productName}-${version}-${arch}.${ext}"
   protocols:
-    - name: "Qwen Desktop"
+    - name: "Qwen Studio"
       schemes:
         - qwen
 
@@ -52,5 +52,5 @@ directories:
 publish:
   provider: github
   owner: youssefvdel
-  repo: qwen-desktop-linux
+  repo: qwen-studio
   releaseType: release

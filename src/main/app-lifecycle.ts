@@ -63,7 +63,7 @@ function registerAppImageProtocolHandler(): void {
       const appimageDesktop = files.find(
         (f) =>
           f.toLowerCase().includes("qwen") ||
-          f.toLowerCase().includes("qwen-desktop"),
+          f.toLowerCase().includes("qwen-studio"),
       );
 
       if (!appimageDesktop) {

@@ -105,7 +105,7 @@ export function createWindow(deps: WindowManagerDeps): BrowserWindow {
       webSecurity: true,
       allowRunningInsecureContent: false,
     },
-    autoHideMenuBar: false,
+    autoHideMenuBar: true,
   });
 
   console.log("[Window] ✅ BrowserWindow created");
@@ -151,19 +151,13 @@ export function createWindow(deps: WindowManagerDeps): BrowserWindow {
     }
   });
 
-  // Catch window.open with qwen:// (OAuth popups sometimes use this)
-  mainWindow.webContents.setWindowOpenHandler((details) => {
-    if (details.url.startsWith("qwen://")) {
-      console.log(
-        "[Window] Caught qwen:// from setWindowOpenHandler:",
-        details.url,
-      );
-      deps.onDeepLink(details.url);
-      return { action: "deny" };
+  // Also catch will-redirect for 302 redirects to qwen://
+  mainWindow.webContents.on("will-redirect", (event, url) => {
+    if (url.startsWith("qwen://")) {
+      event.preventDefault();
+      console.log("[Window] Caught qwen:// redirect (302):", url);
+      deps.onDeepLink(url);
     }
-    // Allow external links to open in system browser
-    shell.openExternal(details.url);
-    return { action: "deny" };
   });
 
   // Log window events for debugging
@@ -225,67 +219,27 @@ export function createWindow(deps: WindowManagerDeps): BrowserWindow {
     }
   });
 
-  // Handle external links - open auth links in-app instead of external browser
   mainWindow.webContents.setWindowOpenHandler((details) => {
-    // If it's a qwen:// deep link, handle it directly
     if (details.url.startsWith("qwen://")) {
-      console.log(
-        "[Window] Caught qwen:// from setWindowOpenHandler:",
-        details.url,
-      );
+      console.log("[Window] Caught qwen:// from setWindowOpenHandler:", details.url);
       deps.onDeepLink(details.url);
       return { action: "deny" };
     }
 
-    // If it's an auth-related URL, open it in an in-app window so we can catch redirects
     const isAuthUrl =
       details.url.includes("login") ||
       details.url.includes("auth") ||
       details.url.includes("oauth") ||
-      details.url.includes("account");
+      details.url.includes("account") ||
+      details.url.includes("passport") ||
+      details.url.includes("signin");
 
     if (isAuthUrl) {
-      console.log("[Window] Opening auth URL in-app:", details.url);
-      const authWindow = new BrowserWindow({
-        width: 500,
-        height: 600,
-        title: "Sign in to Qwen",
-        parent: mainWindow,
-        modal: false,
-        webPreferences: {
-          partition: "persist:auth-session",
-        },
-      });
-
-      authWindow.loadURL(details.url);
-
-      // Catch qwen:// redirects in the auth window
-      authWindow.webContents.on("will-navigate", (event, url) => {
-        if (url.startsWith("qwen://")) {
-          event.preventDefault();
-          console.log("[Window] Auth window caught qwen:// redirect:", url);
-          deps.onDeepLink(url);
-          authWindow.close();
-        }
-      });
-
-      // Also catch will-redirect for 302 redirects to qwen://
-      authWindow.webContents.on("will-redirect", (event, url) => {
-        if (url.startsWith("qwen://")) {
-          event.preventDefault();
-          console.log(
-            "[Window] Auth window caught qwen:// redirect (302):",
-            url,
-          );
-          deps.onDeepLink(url);
-          authWindow.close();
-        }
-      });
-
+      console.log("[Window] Navigating main window to auth URL:", details.url);
+      mainWindow.loadURL(details.url);
       return { action: "deny" };
     }
 
-    // For all other external links, open in system browser
     shell.openExternal(details.url);
     return { action: "deny" };
   });
@@ -347,7 +301,7 @@ function setupSystemTray(
     const resizedIcon = trayIcon.resize({ width: 16, height: 16 });
 
     const appTray = new Tray(resizedIcon);
-    appTray.setToolTip("Qwen Desktop");
+    appTray.setToolTip("Qwen Studio");
 
     const contextMenu = Menu.buildFromTemplate([
       {

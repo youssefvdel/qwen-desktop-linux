@@ -1,5 +1,5 @@
 /**
- * Qwen Desktop for Linux — Main Entry Point
+ * Qwen Studio — Main Entry Point
  *
  * This is the Electron app bootstrap. It:
  * - Configures app flags (GPU, sandbox, etc.)
@@ -13,14 +13,9 @@
 import {
   app,
   BrowserWindow,
-  Menu,
-  MenuItemConstructorOptions,
-  dialog,
-  nativeImage,
 } from "electron";
 import path from "path";
 import fs from "fs";
-import { autoUpdater } from "electron-updater";
 import settings from "electron-settings";
 import { McpProxy } from "../mcp/proxy.js";
 import { adaptConfig } from "./mcp-config.js";
@@ -32,7 +27,6 @@ import {
 import { setupAutoUpdater } from "./updater.js";
 import { createWindow } from "./window-manager.js";
 import { registerIpcHandlers, MCP_CONFIG_KEY } from "./ipc-handlers.js";
-import { qwenProxy } from "./qwen-proxy.js";
 import { logger } from "./logger.js";
 import {
   configureApp,
@@ -46,28 +40,12 @@ import {
   getAvailableSkills,
   injectSkill,
   openSkillsFolder,
-  buildSkillsMenuTemplate,
 } from "./skills-manager.js";
 import type { McpConfig } from "../shared/types.js";
 
 // === Constants ===
 const APP_VERSION = app.getVersion();
 const WEBVIEW_URL = "https://chat.qwen.ai";
-
-/**
- * Compare two semver strings.
- * Returns -1 if a < b, 0 if equal, 1 if a > b.
- * Used for update version checks without external dependencies.
- */
-function compareVersions(a: string, b: string): number {
-  const pa = a.split(".").map(Number);
-  const pb = b.split(".").map(Number);
-  for (let i = 0; i < 3; i++) {
-    const diff = (pa[i] || 0) - (pb[i] || 0);
-    if (diff !== 0) return Math.sign(diff);
-  }
-  return 0;
-}
 
 // === MCP Proxy Instance ===
 // Singleton that manages all MCP server connections
@@ -78,24 +56,6 @@ let mainWindow: BrowserWindow | null = null;
 
 /** Getter for mainWindow — used by IPC handlers and skills module */
 const getMainWindow = (): BrowserWindow | null => mainWindow;
-
-/**
- * Load the app icon from bundled resources.
- * Tries multiple paths to support both dev and packaged modes.
- */
-function getAppIcon(): Electron.NativeImage | undefined {
-  const iconPaths = [
-    path.join(process.resourcesPath, "icon.png"),
-    path.join(__dirname, "../../resources/icon.png"),
-    path.join(process.cwd(), "resources/icon.png"),
-  ];
-  for (const p of iconPaths) {
-    try {
-      if (fs.existsSync(p)) return nativeImage.createFromPath(p);
-    } catch { }
-  }
-  return undefined;
-}
 
 // === MCP Config Management ===
 
@@ -182,115 +142,13 @@ async function mcpClientClose(): Promise<void> {
   await mcpServer.disconnectAll();
 }
 
-// === Application Menu ===
-
-/**
- * Build and set the application menu.
- * Includes: App menu (update check, quit), Edit, View, and Skills submenu.
- */
-async function setupMenu(): Promise<void> {
-  const skillsItems = await buildSkillsMenuTemplate(getMainWindow);
-
-  const template: MenuItemConstructorOptions[] = [
-    {
-      label: "Qwen",
-      submenu: [
-        {
-          label: "Check for Updates",
-          click: async () => {
-            console.log("[Updater] Manual check triggered");
-            if (!mainWindow) return;
-            try {
-              const updateInfo = await autoUpdater.checkForUpdates();
-              if (updateInfo && updateInfo.updateInfo) {
-                const currentVersion = app.getVersion();
-                const latestVersion = updateInfo.updateInfo.version;
-                // Only offer update if latest is newer (not a downgrade)
-                if (compareVersions(latestVersion, currentVersion) > 0) {
-                  const response = dialog.showMessageBoxSync(mainWindow, {
-                    icon: getAppIcon(),
-                    type: "info",
-                    title: "Update Available",
-                    message: `A new version (${latestVersion}) is available! Current version: ${currentVersion}.`,
-                    buttons: ["Download", "Later"],
-                    defaultId: 0,
-                  });
-                  if (response === 0) autoUpdater.downloadUpdate();
-                } else {
-                  dialog.showMessageBoxSync(mainWindow, {
-                    icon: getAppIcon(),
-                    type: "info",
-                    title: "Up to Date",
-                    message: `You are using the latest version (${currentVersion}).`,
-                  });
-                }
-              } else {
-                dialog.showMessageBoxSync(mainWindow, {
-                  icon: getAppIcon(),
-                  type: "info",
-                  title: "Up to Date",
-                  message: "You are using the latest version.",
-                });
-              }
-            } catch (error) {
-              console.error("[Updater] Check failed:", error);
-              dialog.showMessageBoxSync(mainWindow, {
-                icon: getAppIcon(),
-                type: "error",
-                title: "Update Check Failed",
-                message: `Could not check for updates.\n\nError: ${error instanceof Error ? error.message : error}`,
-              });
-            }
-          },
-        },
-        { type: "separator" },
-        { role: "quit" },
-      ],
-    },
-    {
-      label: "Edit",
-      submenu: [
-        { role: "undo" },
-        { role: "redo" },
-        { type: "separator" },
-        { role: "cut" },
-        { role: "copy" },
-        { role: "paste" },
-        { role: "delete" },
-        { role: "selectAll" },
-      ],
-    },
-    {
-      label: "View",
-      submenu: [
-        { role: "reload" },
-        { role: "forceReload" },
-        { role: "toggleDevTools" },
-        { type: "separator" },
-        { role: "resetZoom" },
-        { role: "zoomIn" },
-        { role: "zoomOut" },
-        { type: "separator" },
-        { role: "togglefullscreen" },
-      ],
-    },
-    {
-      label: "Skills",
-      submenu: skillsItems,
-    },
-  ];
-
-  const menu = Menu.buildFromTemplate(template);
-  Menu.setApplicationMenu(menu);
-}
-
 // === App Bootstrap ===
 
 // Configure app flags BEFORE ready (GPU, sandbox, platform hints)
 configureApp();
 
 app.whenReady().then(async () => {
-  logger.info('🚀 Starting Qwen Desktop for Linux', { platform: getPlatformName(), version: APP_VERSION });
+  logger.info('🚀 Starting Qwen Studio', { platform: getPlatformName(), version: APP_VERSION });
 
   try {
     // Make bundled runtimes executable (dev mode only)
@@ -341,81 +199,6 @@ app.whenReady().then(async () => {
       isQuitting,
       onDeepLink: (url) => handleDeepLink(url, mainWindow),
     });
-
-    // === Start Qwen Web API Proxy (Direct HTTP Bridge) ===
-    // Exposes OpenAI-compatible endpoint at http://localhost:11435
-    logger.info('🔗 Initializing QwenProxy...');
-    qwenProxy.setWindow(mainWindow);
-    qwenProxy.start();
-    // ======================================================
-
-    // === Force DevTools Open (for API discovery) ===
-    // Auto-open detached DevTools so we can inspect network traffic
-    setTimeout(() => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.openDevTools({ mode: 'detach' });
-        logger.info('🔍 DevTools auto-opened in detached mode for API inspection');
-      }
-    }, 3000);
-    // =============================================
-
-    // === Aggressive Network Interceptor for API Discovery ===
-    const ses = mainWindow.webContents.session;
-
-    // Log ALL requests to chat.qwen.ai (XHR/fetch only)
-    // Note: Electron uses 'xhr' for both XHR and fetch requests
-    ses.webRequest.onBeforeRequest({ urls: ['*://chat.qwen.ai/*'] }, (details, callback) => {
-      if (details.resourceType === 'xhr') {
-        logger.info('🌐 [API-TRACE] ' + details.method + ' ' + details.url, {
-          resourceType: details.resourceType,
-          requestId: details.id,
-          timestamp: new Date().toISOString()
-        });
-        // Log POST body if present
-        if (details.uploadData) {
-          const body = details.uploadData.map((d: any) =>
-            d.bytes ? Buffer.from(d.bytes).toString('utf8') : d.text
-          ).join('');
-          if (body) logger.debug('📦 [API-BODY] ' + body.substring(0, 500));
-        }
-      }
-      callback({});
-    });
-
-    // Log headers for API-like requests
-    ses.webRequest.onSendHeaders({ urls: ['*://chat.qwen.ai/*'] }, (details) => {
-      if (details.resourceType === 'xhr' &&
-        (details.url.includes('/api') || details.url.includes('/gpts') || details.url.includes('/chat'))) {
-        logger.info('🔑 [API-HEADERS] ' + details.url, {
-          method: details.method,
-          headers: Object.fromEntries(
-            Object.entries(details.requestHeaders).filter(([k]) =>
-              !['cookie', 'authorization'].includes(k.toLowerCase())
-            )
-          )
-        });
-      }
-    });
-
-    // Log responses
-    ses.webRequest.onCompleted({ urls: ['*://chat.qwen.ai/*'] }, (details) => {
-      if (details.resourceType === 'xhr' &&
-        (details.url.includes('/api') || details.url.includes('/gpts') || details.url.includes('/chat'))) {
-        logger.info('✅ [API-RESPONSE] ' + details.statusCode + ' ' + details.url, {
-          status: details.statusCode,
-          method: details.method,
-          size: details.responseHeaders?.['content-length']?.[0] || 'unknown'
-        });
-        // If error status, log more
-        if (details.statusCode >= 400) {
-          logger.warn('❌ [API-ERROR] ' + details.url + ' -> ' + details.statusCode);
-        }
-      }
-    });
-    // =============================================
-
-    // Build menu after window creation (so skills menu can populate)
-    await setupMenu();
 
     console.log("[App] ✅ Window created successfully");
 
